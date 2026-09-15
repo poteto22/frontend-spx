@@ -1,0 +1,42 @@
+{
+  "itemTypes": [
+    {
+      "label": "บาร์ประเด็น",
+      "value": "mainbar"
+    },
+    {
+      "label": "บาร์ชื่อ-ตำแหน่ง",
+      "value": "bar2line"
+    }
+  ],
+  "mainbarOptions": [
+    {
+      "label": "BAR.png",
+      "value": "./assets/bar/BAR.png"
+    }
+  ],
+  "headbarOptions": [
+    {
+      "label": "none",
+      "value": ""
+    },
+    {
+      "label": "top-bar-1.png",
+      "value": "./assets/head/top-bar-1.png"
+    },
+    {
+      "label": "top-bar-2.png",
+      "value": "./assets/head/top-bar-2.png"
+    },
+    {
+      "label": "top-bar-3.png",
+      "value": "./assets/head/top-bar-3.png"
+    },
+    {
+      "label": "top-bar-4.png",
+      "value": "./assets/head/top-bar-4.png"
+    }
+  ],
+  "spxApiUrl": "http://localhost:5656/api/v1",
+  "endpointUrl": "http://localhost:8080/mainbar"
+}

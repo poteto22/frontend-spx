@@ -1,0 +1,87 @@
+[
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "",
+    "topic": "มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": ""
+      },
+      {
+        "field": "f1",
+        "value": "มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "ประเด็นร้อน",
+    "topic": "หนุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น ควงมีดแทงดับ",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "./assets/head/top-bar-2.png",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "ประเด็นร้อน"
+      },
+      {
+        "field": "f1",
+        "value": "หนุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น ควงมีดแทงดับ"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": "./assets/head/top-bar-2.png"
+      }
+    ]
+  },
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "",
+    "topic": "ข่าวพาดหัวเดียวแบบเว้นว่าง Head และ Headbar",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "",
+    "customFields": [],
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": ""
+      },
+      {
+        "field": "f1",
+        "value": "ข่าวพาดหัวเดียวแบบเว้นว่าง Head และ Headbar"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": ""
+      }
+    ]
+  }
+]

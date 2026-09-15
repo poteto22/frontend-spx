@@ -1,0 +1,287 @@
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+const PORT = 8080;
+const PUBLIC_DIR = __dirname;
+const DATA_FILE = path.join(__dirname, 'data', 'rundown.json');
+const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
+
+// Memory store for items
+let itemsStore = [
+  {
+    itemID: 'mainbar',
+    head: 'หัวเรื่อง',
+    topic: 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ',
+    mainbar: './assets/bar/MAIN BAR.png',
+    headbar: './assets/head/top-bar-1.png'
+  },
+  {
+    itemID: 'bar2line',
+    head: '',
+    topic: 'รายงานสดสถานการณ์น้ำท่วมและมาตรการช่วยเหลือประชาชน',
+    mainbar: './assets/bar/MAIN BAR.png',
+    headbar: ''
+  }
+];
+
+// Active items map for each itemID (spx template ID)
+let activeItemsMap = {};
+
+// Helper to scan asset folder for image files
+function scanAssetFolder(folderSubpath) {
+  const dirPath = path.join(__dirname, folderSubpath);
+  if (!fs.existsSync(dirPath)) return [];
+  try {
+    const files = fs.readdirSync(dirPath);
+    const scanned = files
+      .filter(f => !f.startsWith('.') && /\.(png|jpg|jpeg|svg|webp)$/i.test(f))
+      .map(f => ({
+        label: f,
+        value: `${folderSubpath.replace(/\/+$/, '')}/${f}`
+      }));
+    
+    // Add empty option for headbar
+    if (folderSubpath.includes('head')) {
+      return [{ label: 'none (ไม่เลือก / เว้นว่าง)', value: '' }, ...scanned];
+    }
+    return scanned;
+  } catch (e) {
+    console.error(`Error scanning ${folderSubpath}:`, e.message);
+    return [];
+  }
+}
+
+// Function to load config merged with asset directory scanning
+function getConfig() {
+  let defaultConfig = {
+    itemTypes: [
+      { label: "บาร์ประเด็น (mainbar)", value: "mainbar" },
+      { label: "บาร์ชื่อ-ตำแหน่ง (bar2line)", value: "bar2line" }
+    ],
+    mainbarOptions: scanAssetFolder('./assets/bar'),
+    headbarOptions: scanAssetFolder('./assets/head'),
+    spxApiUrl: "http://localhost:5656/api/v1",
+    endpointUrl: "http://localhost:8080/mainbar"
+  };
+
+  if (fs.existsSync(CONFIG_FILE)) {
+    try {
+      const raw = fs.readFileSync(CONFIG_FILE, 'utf8');
+      if (raw.trim()) {
+        const parsed = JSON.parse(raw);
+        if (parsed.itemTypes) defaultConfig.itemTypes = parsed.itemTypes;
+        if (parsed.mainbarOptions && parsed.mainbarOptions.length > 0) defaultConfig.mainbarOptions = parsed.mainbarOptions;
+        if (parsed.headbarOptions && parsed.headbarOptions.length > 0) defaultConfig.headbarOptions = parsed.headbarOptions;
+        if (parsed.spxApiUrl) defaultConfig.spxApiUrl = parsed.spxApiUrl;
+        if (parsed.endpointUrl) defaultConfig.endpointUrl = parsed.endpointUrl;
+      }
+    } catch (e) {
+      console.error('Error reading config file:', e.message);
+    }
+  }
+
+  if (!defaultConfig.mainbarOptions || defaultConfig.mainbarOptions.length === 0) {
+    defaultConfig.mainbarOptions = scanAssetFolder('./assets/bar');
+  }
+  if (!defaultConfig.headbarOptions || defaultConfig.headbarOptions.length === 0) {
+    defaultConfig.headbarOptions = scanAssetFolder('./assets/head');
+  } else {
+    // Ensure none option exists
+    if (!defaultConfig.headbarOptions.some(o => o.value === '')) {
+      defaultConfig.headbarOptions.unshift({ label: 'none (ไม่เลือก / เว้นว่าง)', value: '' });
+    }
+  }
+
+  return defaultConfig;
+}
+
+// Load persisted items if data/rundown.json exists
+if (fs.existsSync(DATA_FILE)) {
+  try {
+    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) itemsStore = parsed;
+    else if (parsed.templates) itemsStore = parsed.templates;
+    else if (parsed.items) itemsStore = parsed.items;
+  } catch (e) {
+    console.error('Error reading data file:', e.message);
+  }
+}
+
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon'
+};
+
+const server = http.createServer((req, res) => {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  let pathname = reqUrl.pathname;
+
+  // GET /api/config
+  if (req.method === 'GET' && pathname === '/api/config') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(getConfig(), null, 2));
+    return;
+  }
+
+  // POST /api/config
+  if (req.method === 'POST' && pathname === '/api/config') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+        fs.writeFileSync(CONFIG_FILE, JSON.stringify(payload, null, 2), 'utf8');
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ status: 'ok', config: getConfig() }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // POST /api/active-item - Sets which specific item data is currently active on-air for a given itemID
+  if (req.method === 'POST' && pathname === '/api/active-item') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        const itemID = payload.itemID || 'mainbar';
+        activeItemsMap[itemID] = {
+          head: payload.head !== undefined ? payload.head : (payload.data ? payload.data.head : ''),
+          topic: payload.topic !== undefined ? payload.topic : (payload.data ? payload.data.topic : ''),
+          mainbar: payload.mainbar !== undefined ? payload.mainbar : './assets/bar/MAIN BAR.png',
+          headbar: payload.headbar !== undefined ? payload.headbar : ''
+        };
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ status: 'ok', itemID, activeData: activeItemsMap[itemID] }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API Endpoint to sync items from Frontend
+  if (req.method === 'POST' && pathname === '/api/items') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        if (Array.isArray(payload)) itemsStore = payload;
+        else if (payload.items) itemsStore = payload.items;
+        else if (payload.templates) itemsStore = payload.templates;
+
+        fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+        fs.writeFileSync(DATA_FILE, JSON.stringify(itemsStore, null, 2), 'utf8');
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ status: 'ok', count: itemsStore.length }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API Endpoint to fetch all items as JSON array
+  if (req.method === 'GET' && pathname === '/api/items') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(itemsStore, null, 2));
+    return;
+  }
+
+  // List of static paths/extensions to exclude from item ID matching
+  const isStaticFile = pathname.startsWith('/css/') ||
+                       pathname.startsWith('/js/') ||
+                       pathname.startsWith('/assets/') ||
+                       pathname.endsWith('.html') ||
+                       pathname.endsWith('.css') ||
+                       pathname.endsWith('.js') ||
+                       pathname.endsWith('.png') ||
+                       pathname.endsWith('.jpg') ||
+                       pathname.endsWith('.ico');
+
+  if (!isStaticFile && pathname !== '/') {
+    const cleanId = pathname.replace(/^\/+/, '').replace(/\.json$/i, '');
+    if (cleanId) {
+      // 1. Check if an item with this itemID was specifically played/triggered
+      if (activeItemsMap[cleanId]) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify(activeItemsMap[cleanId], null, 2));
+        return;
+      }
+
+      // 2. Otherwise check itemsStore for matched item
+      const matchedItem = itemsStore.find(i => i.itemID === cleanId || i.id === cleanId);
+      if (matchedItem) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          head: matchedItem.head !== undefined ? matchedItem.head : '',
+          topic: matchedItem.topic !== undefined ? matchedItem.topic : '',
+          mainbar: matchedItem.mainbar !== undefined ? matchedItem.mainbar : './assets/bar/MAIN BAR.png',
+          headbar: matchedItem.headbar !== undefined ? matchedItem.headbar : ''
+        }, null, 2));
+        return;
+      } else {
+        // Fallback JSON payload
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          head: '',
+          topic: 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ',
+          mainbar: './assets/bar/MAIN BAR.png',
+          headbar: ''
+        }, null, 2));
+        return;
+      }
+    }
+  }
+
+  // Serve static files
+  if (pathname === '/') pathname = '/index.html';
+  const filePath = path.join(PUBLIC_DIR, pathname);
+
+  fs.stat(filePath, (err, stats) => {
+    if (err || !stats.isFile()) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('404 Not Found');
+      return;
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    res.writeHead(200, { 'Content-Type': contentType });
+    fs.createReadStream(filePath).pipe(res);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`SPX-CG Server running at http://localhost:${PORT}/`);
+  console.log(`JSON Endpoint available at http://localhost:${PORT}/mainbar`);
+});

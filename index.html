@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPX-CG Controller - Front-End Workspace</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="light-theme">
+  <div id="app">
+    <!-- Top Header & Navigation -->
+    <header class="header-bar">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">SPX-CG Control</span>
+          <span class="brand-subtitle">Broadcast Graphics Management</span>
+        </div>
+      </div>
+
+      <!-- 4 Screen Tabs -->
+      <nav class="nav-screens">
+        <button class="nav-screen-btn active" data-view="view-main-rundown">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          1. Main Rundown
+        </button>
+        <button class="nav-screen-btn" data-view="view-create-rundown">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          2. สร้าง Rundown
+        </button>
+        <button class="nav-screen-btn" data-view="view-controller">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          3. ควบคุม Rundown
+        </button>
+        <button class="nav-screen-btn" data-view="view-settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          4. ตั้งค่า
+        </button>
+      </nav>
+
+      <!-- Status, Auto-Save Pill & Emergency Controls -->
+      <div class="header-right">
+        <!-- Auto-Save Status Pill -->
+        <div class="autosave-status-pill saved" id="autosave-pill" title="สถานะการบันทึกอัตโนมัติ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span id="autosave-text">Auto-Saved</span>
+        </div>
+
+        <div class="connection-status-pill" id="conn-status-pill">
+          <span class="status-dot disconnected" id="status-dot"></span>
+          <span class="status-label" id="status-label">Disconnected</span>
+        </div>
+
+        <button class="btn btn-warning btn-sm" id="btn-stop-all-layers" title="Stop all graphics with out animation">
+          Stop All
+        </button>
+        <button class="btn btn-danger btn-sm btn-pulse" id="btn-panic" title="Clear all graphics instantly">
+          PANIC
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="main-body">
+      
+      <!-- SCREEN 1: MAIN RUNDOWN (หน้าจอแสดงผล Main Rundown) -->
+      <section class="screen-view active" id="view-main-rundown">
+        <!-- View Content injected dynamically by mainRundown.js -->
+      </section>
+
+      <!-- SCREEN 2: CREATE RUNDOWN (หน้าจอสร้าง Rundown) -->
+      <section class="screen-view" id="view-create-rundown">
+        <!-- View Content injected dynamically by createRundown.js -->
+      </section>
+
+      <!-- SCREEN 3: RUNDOWN CONTROLLER (หน้าจอควบคุม Rundown) -->
+      <section class="screen-view" id="view-controller">
+        <!-- View Content injected dynamically by controller.js -->
+      </section>
+
+      <!-- SCREEN 4: SETTINGS (หน้าจอตั้งค่า) -->
+      <section class="screen-view" id="view-settings">
+        <!-- View Content injected dynamically by settings.js -->
+      </section>
+
+    </main>
+
+    <!-- ITEM EDITOR MODAL DIALOG -->
+    <dialog class="modal-dialog" id="item-editor-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="editor-dialog-title">เพิ่ม / แก้ไข รายการ CG</h3>
+          <button class="btn-icon" id="btn-close-editor-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="item-editor-form" onsubmit="return false;">
+            <input type="hidden" id="edit-item-index" value="-1">
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="edit-item-id">ชนิด CG (itemID)</label>
+                <select class="form-control" id="edit-item-id" required>
+                  <option value="mainbar">บาร์ประเด็น (mainbar)</option>
+                  <option value="bar2line">บาร์ชื่อ-ตำแหน่ง (bar2line)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit-item-template">Template File Path</label>
+                <input type="text" class="form-control font-mono" id="edit-item-template" value="Example/New-bar4.html" placeholder="e.g. Example/New-bar4.html" required>
+              </div>
+
+              <!-- Head input: optional (no required attribute) -->
+              <div class="form-group full-width">
+                <label class="form-label" for="edit-item-head">Head (หัวเรื่อง - เว้นว่างได้)</label>
+                <input type="text" class="form-control" id="edit-item-head" placeholder="e.g. ข่าวเด่นวันนี้ (เว้นว่างได้)">
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="edit-item-topic">Topic (หัวข้อย่อย)</label>
+                <textarea class="form-control" id="edit-item-topic" rows="2" placeholder="e.g. มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ" required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit-item-mainbar">Main Bar Image (รูปภาพ Main Bar)</label>
+                <select class="form-control" id="edit-item-mainbar">
+                  <option value="./assets/bar/MAIN BAR.png">MAIN BAR.png</option>
+                </select>
+              </div>
+
+              <!-- Headbar select: supports empty value option -->
+              <div class="form-group">
+                <label class="form-label" for="edit-item-headbar">Head Bar Image (รูปภาพ Head Bar)</label>
+                <select class="form-control" id="edit-item-headbar">
+                  <option value="">none (ไม่เลือก / เว้นว่าง)</option>
+                  <option value="./assets/head/top-bar-1.png">top-bar-1.png</option>
+                  <option value="./assets/head/top-bar-2.png">top-bar-2.png</option>
+                  <option value="./assets/head/top-bar-3.png">top-bar-3.png</option>
+                  <option value="./assets/head/top-bar-4.png">top-bar-4.png</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit-item-layer">Webplayout Layer</label>
+                <input type="number" class="form-control" id="edit-item-layer" value="1" min="1" max="100">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit-item-out">Out Mode</label>
+                <select class="form-control" id="edit-item-out">
+                  <option value="manual">Manual (กดหยุดเอง)</option>
+                  <option value="3000">3 วินาที Auto-Out</option>
+                  <option value="5000">5 วินาที Auto-Out</option>
+                  <option value="10000">10 วินาที Auto-Out</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Additional Custom DataFields -->
+            <div class="datafields-section mt-4">
+              <div class="section-header flex-between">
+                <span class="fw-600 fs-sm">ข้อมูลเพิ่มเติม (Additional JSON Key-Values)</span>
+                <button type="button" class="btn btn-xs btn-outline" id="btn-editor-add-field">+ เพิ่ม Field</button>
+              </div>
+              <div class="datafields-list mt-2" id="editor-datafields-list">
+                <!-- Custom fields -->
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="btn-cancel-editor">ยกเลิก</button>
+          <button class="btn btn-primary" id="btn-save-editor-item">บันทึกรายการ</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- TOAST NOTIFICATION STACK -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
