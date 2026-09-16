@@ -31,6 +31,19 @@
 
 
     <style>
+      @font-face {
+        font-family: 'Noto Sans Thai';
+        src: url('/fonts/NotoSansThai-Black.ttf') format('truetype'),
+             url('../../fonts/NotoSansThai-Black.ttf') format('truetype'),
+             url('./fonts/NotoSansThai-Black.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      #render, #render * {
+        font-family: 'Noto Sans Thai', sans-serif !important;
+      }
+
       body {
         margin: 0;
         padding: 0;
@@ -796,7 +809,8 @@
 
         if (value.startsWith("./assets/") || value.startsWith("assets/") || value.startsWith("/assets/")) {
           const cleanPath = value.replace(/^\.?\//, "");
-          return "http://localhost:8080/" + cleanPath;
+          const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "http://localhost:8080";
+          return origin.replace(/\/+$/, "") + "/" + cleanPath;
         }
 
         if (!value.includes("/") && folder) {
@@ -813,6 +827,12 @@
         try {
           let fetchUrl = url;
           if (url.startsWith("http://") || url.startsWith("https://")) {
+            if (typeof window !== "undefined" && window.location && window.location.hostname) {
+              const curHost = window.location.hostname;
+              if (curHost !== "localhost" && curHost !== "127.0.0.1") {
+                fetchUrl = fetchUrl.replace(/:\/\/(localhost|127\.0\.0\.1)/i, `://${curHost}`);
+              }
+            }
             try {
               let proxyUrl = `/api/v1/feedproxy?url=${encodeURIComponent(url)}`;
               const proxyRes = await fetch(proxyUrl);

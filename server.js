@@ -132,6 +132,43 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Reverse Proxy /spx-api/* to SPX Server (default http://localhost:5656/api/v1)
+  if (pathname.startsWith('/spx-api')) {
+    const config = getConfig();
+    const spxBase = (config && config.spxApiUrl) ? config.spxApiUrl : 'http://localhost:5656/api/v1';
+    const subPath = pathname.replace(/^\/spx-api(\/v1)?/, '');
+    const targetUrlString = `${spxBase.replace(/\/+$/, '')}${subPath.startsWith('/') ? subPath : '/' + subPath}${reqUrl.search}`;
+    
+    try {
+      const targetUrl = new URL(targetUrlString);
+      const clientReq = http.request(targetUrl, {
+        method: req.method,
+        headers: {
+          'accept': 'application/json',
+          'content-type': req.headers['content-type'] || 'application/json'
+        }
+      }, (spxRes) => {
+        res.writeHead(spxRes.statusCode, {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': spxRes.headers['content-type'] || 'application/json; charset=utf-8'
+        });
+        spxRes.pipe(res);
+      });
+
+      clientReq.on('error', (proxyErr) => {
+        console.error(`SPX Proxy error for ${targetUrlString}:`, proxyErr.message);
+        res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: `ไม่สามารถเชื่อมต่อกับ SPX Server ที่ ${targetUrl.origin}: ${proxyErr.message}` }));
+      });
+
+      req.pipe(clientReq);
+    } catch (err) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: `URL SPX ไม่ถูกต้อง: ${err.message}` }));
+    }
+    return;
+  }
+
   // POST /api/rescan-assets - Explicit asset folder rescan
   if (req.method === 'POST' && pathname === '/api/rescan-assets') {
     const config = getConfig();

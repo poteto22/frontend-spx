@@ -21,6 +21,10 @@ export class SettingsView {
   render() {
     const { apiUrl, apiKey, config } = this.store.getState();
 
+    const currentHost = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+    const currentPort = (typeof window !== 'undefined' && window.location && window.location.port) ? window.location.port : '8080';
+    const defaultEndpointUrl = `http://${currentHost}:${currentPort}/mainbar`;
+
     this.container.innerHTML = `
       <div class="settings-container">
         <!-- Card 1: Config.json Options Management -->
@@ -80,7 +84,7 @@ export class SettingsView {
               <div class="form-group">
                 <label class="form-label" for="cfg-api-url">SPX Server API Base URL</label>
                 <input type="url" class="form-control" id="cfg-api-url" value="${apiUrl}" required>
-                <span class="text-muted fs-xs">ค่าเริ่มต้นมาตรฐาน: http://localhost:5656/api/v1</span>
+                <span class="text-muted fs-xs">ค่าเริ่มต้นมาตรฐาน: http://${currentHost}:5656/api/v1 (หรือใช้ Reverse Proxy อัตโนมัติ)</span>
               </div>
 
               <div class="form-group mt-3">
@@ -90,7 +94,7 @@ export class SettingsView {
 
               <div class="form-group mt-3">
                 <label class="form-label" for="cfg-endpoint-url">Frontend JSON Endpoint Path (สำหรับให้ SPX ดึงข้อมูล)</label>
-                <input type="text" class="form-control font-mono" id="cfg-endpoint-url" value="http://localhost:8080/mainbar">
+                <input type="text" class="form-control font-mono" id="cfg-endpoint-url" value="${defaultEndpointUrl}">
               </div>
 
               <div class="flex-between mt-4">

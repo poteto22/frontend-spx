@@ -17,6 +17,15 @@ export class SPXClient {
 
   async _request(endpoint, options = {}) {
     let url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
+
+    // Dynamically replace localhost/127.0.0.1 with current window.location.hostname if client accesses from another network device
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      const currentHost = window.location.hostname;
+      if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
+        url = url.replace(/:\/\/(localhost|127\.0\.0\.1)/i, `://${currentHost}`);
+      }
+    }
+
     if (this.apiKey && !endpoint.startsWith('/api/config')) {
       const separator = url.includes('?') ? '&' : '?';
       url += `${separator}apikey=${encodeURIComponent(this.apiKey)}`;
@@ -40,6 +49,19 @@ export class SPXClient {
       const data = await response.json().catch(() => null);
       return data;
     } catch (error) {
+      // Fallback to server proxy (/spx-api/v1/...) if direct fetch to SPX port fails
+      if (!endpoint.startsWith('http') && !url.includes('/spx-api/')) {
+        try {
+          const proxyUrl = `/spx-api/v1${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+          console.warn(`Direct SPX fetch to ${url} failed (${error.message}). Attempting proxy fallback: ${proxyUrl}`);
+          const proxyRes = await fetch(proxyUrl, { ...options, headers });
+          if (proxyRes.ok) {
+            return await proxyRes.json().catch(() => null);
+          }
+        } catch (proxyErr) {
+          console.error(`Proxy fallback error [${endpoint}]:`, proxyErr);
+        }
+      }
       console.error(`API fetch error [${endpoint}]:`, error);
       throw error;
     }

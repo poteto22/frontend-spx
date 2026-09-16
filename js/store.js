@@ -7,8 +7,11 @@ export class Store {
     this.autoSaveTimer = null;
     this.api = null; // SPX API Client reference
 
+    const defaultHost = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+    const initialApiUrl = localStorage.getItem('spx_api_url') || `http://${defaultHost}:5656/api/v1`;
+
     this.state = {
-      apiUrl: localStorage.getItem('spx_api_url') || 'http://localhost:5656/api/v1',
+      apiUrl: initialApiUrl,
       apiKey: localStorage.getItem('spx_api_key') || '',
       isConnected: false,
       serverInfo: null,
