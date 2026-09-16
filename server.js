@@ -59,8 +59,8 @@ function getConfig() {
       { label: "บาร์ประเด็น (mainbar)", value: "mainbar" },
       { label: "บาร์ชื่อ-ตำแหน่ง (bar2line)", value: "bar2line" }
     ],
-    mainbarOptions: scanAssetFolder('./assets/bar'),
-    headbarOptions: scanAssetFolder('./assets/head'),
+    mainbarOptions: [],
+    headbarOptions: [],
     spxApiUrl: "http://localhost:5656/api/v1",
     endpointUrl: "http://localhost:8080/mainbar"
   };
@@ -70,9 +70,7 @@ function getConfig() {
       const raw = fs.readFileSync(CONFIG_FILE, 'utf8');
       if (raw.trim()) {
         const parsed = JSON.parse(raw);
-        if (parsed.itemTypes) defaultConfig.itemTypes = parsed.itemTypes;
-        if (parsed.mainbarOptions && parsed.mainbarOptions.length > 0) defaultConfig.mainbarOptions = parsed.mainbarOptions;
-        if (parsed.headbarOptions && parsed.headbarOptions.length > 0) defaultConfig.headbarOptions = parsed.headbarOptions;
+        if (parsed.itemTypes && Array.isArray(parsed.itemTypes)) defaultConfig.itemTypes = parsed.itemTypes;
         if (parsed.spxApiUrl) defaultConfig.spxApiUrl = parsed.spxApiUrl;
         if (parsed.endpointUrl) defaultConfig.endpointUrl = parsed.endpointUrl;
       }
@@ -81,17 +79,9 @@ function getConfig() {
     }
   }
 
-  if (!defaultConfig.mainbarOptions || defaultConfig.mainbarOptions.length === 0) {
-    defaultConfig.mainbarOptions = scanAssetFolder('./assets/bar');
-  }
-  if (!defaultConfig.headbarOptions || defaultConfig.headbarOptions.length === 0) {
-    defaultConfig.headbarOptions = scanAssetFolder('./assets/head');
-  } else {
-    // Ensure none option exists
-    if (!defaultConfig.headbarOptions.some(o => o.value === '')) {
-      defaultConfig.headbarOptions.unshift({ label: 'none (ไม่เลือก / เว้นว่าง)', value: '' });
-    }
-  }
+  // ALWAYS scan fresh assets from disk to detect new, renamed, or removed files
+  defaultConfig.mainbarOptions = scanAssetFolder('./assets/bar');
+  defaultConfig.headbarOptions = scanAssetFolder('./assets/head');
 
   return defaultConfig;
 }
@@ -142,6 +132,20 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // POST /api/rescan-assets - Explicit asset folder rescan
+  if (req.method === 'POST' && pathname === '/api/rescan-assets') {
+    const config = getConfig();
+    try {
+      fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+      fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf8');
+    } catch (e) {
+      console.error('Error writing config file on rescan:', e.message);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ status: 'ok', config }));
+    return;
+  }
+
   // POST /api/config
   if (req.method === 'POST' && pathname === '/api/config') {
     let body = '';
@@ -149,6 +153,9 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const payload = JSON.parse(body);
+        payload.mainbarOptions = scanAssetFolder('./assets/bar');
+        payload.headbarOptions = scanAssetFolder('./assets/head');
+
         fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
         fs.writeFileSync(CONFIG_FILE, JSON.stringify(payload, null, 2), 'utf8');
 

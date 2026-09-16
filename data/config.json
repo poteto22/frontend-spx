@@ -17,24 +17,24 @@
   ],
   "headbarOptions": [
     {
-      "label": "none",
+      "label": "none (ไม่เลือก / เว้นว่าง)",
       "value": ""
     },
     {
-      "label": "top-bar-1.png",
-      "value": "./assets/head/top-bar-1.png"
+      "label": "top-bar-blue.png",
+      "value": "./assets/head/top-bar-blue.png"
     },
     {
-      "label": "top-bar-2.png",
-      "value": "./assets/head/top-bar-2.png"
+      "label": "top-bar-gray.png",
+      "value": "./assets/head/top-bar-gray.png"
     },
     {
-      "label": "top-bar-3.png",
-      "value": "./assets/head/top-bar-3.png"
+      "label": "top-bar-red.png",
+      "value": "./assets/head/top-bar-red.png"
     },
     {
-      "label": "top-bar-4.png",
-      "value": "./assets/head/top-bar-4.png"
+      "label": "top-bar-yellow.png",
+      "value": "./assets/head/top-bar-yellow.png"
     }
   ],
   "spxApiUrl": "http://localhost:5656/api/v1",

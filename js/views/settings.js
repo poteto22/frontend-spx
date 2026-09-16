@@ -127,8 +127,9 @@ export class SettingsView {
     });
 
     document.getElementById('btn-rescan-assets').addEventListener('click', async () => {
-      await this.store.loadConfigFromBackend();
-      this.showToast('สแกนไฟล์รูปภาพใน Assets สำเร็จ', 'success');
+      const config = await this.store.rescanAssets();
+      this.renderConfigEditor(config);
+      this.showToast('สแกนไฟล์รูปภาพใน Assets สำเร็จ! อัปเดตรายการรูปภาพใหม่เรียบร้อยแล้ว', 'success');
     });
 
     document.getElementById('btn-save-config-file').addEventListener('click', async () => {

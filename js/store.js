@@ -92,10 +92,27 @@ export class Store {
       if (res.ok) {
         const config = await res.json();
         this.setState({ config });
+        return config;
       }
     } catch (e) {
       console.warn('Could not load backend config:', e.message);
     }
+  }
+
+  async rescanAssets() {
+    try {
+      const res = await fetch('/api/rescan-assets', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.config) {
+          this.setState({ config: data.config });
+          return data.config;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not rescan assets:', e.message);
+    }
+    return await this.loadConfigFromBackend();
   }
 
   async loadItemsFromBackend() {
