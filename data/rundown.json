@@ -1,11 +1,16 @@
 [
   {
-    "itemID": "mainbar",
+    "itemID": "bar2name",
     "relpath": "Example/New-bar4.html",
     "webplayout": "1",
     "out": "manual",
     "head": "",
-    "topic": "มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ",
+    "topic": "ณัฐวุฒิ บัวมาตร์ & ลิขิต เคลากลาง (ผู้ดำเนินรายการ)",
+    "line1": "",
+    "line2": "ผู้ดำเนินรายการ",
+    "name1": "ณัฐวุฒิ บัวมาตร์",
+    "name2": "ลิขิต เคลากลาง",
+    "logo": "",
     "mainbar": "./assets/bar/BAR.png",
     "headbar": "",
     "DataFields": [
@@ -14,8 +19,16 @@
         "value": ""
       },
       {
-        "field": "f1",
-        "value": "มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ"
+        "field": "name1",
+        "value": "ณัฐวุฒิ บัวมาตร์"
+      },
+      {
+        "field": "name2",
+        "value": "ลิขิต เคลากลาง"
+      },
+      {
+        "field": "line2",
+        "value": "ผู้ดำเนินรายการ"
       },
       {
         "field": "mainbar",
@@ -35,7 +48,7 @@
     "head": "ประเด็นร้อน",
     "topic": "หนุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น ควงมีดแทงดับ",
     "mainbar": "./assets/bar/BAR.png",
-    "headbar": "./assets/head/top-bar-2.png",
+    "headbar": "./assets/head/top-bar-red.png",
     "DataFields": [
       {
         "field": "f0",
@@ -43,7 +56,7 @@
       },
       {
         "field": "f1",
-        "value": "หนุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น ควงมีดแทงดับ"
+        "value": "ห���ุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น ควงมีดแทงดับ"
       },
       {
         "field": "mainbar",
@@ -51,9 +64,97 @@
       },
       {
         "field": "headbar",
-        "value": "./assets/head/top-bar-2.png"
+        "value": "./assets/head/top-bar-red.png"
       }
-    ]
+    ],
+    "customFields": []
+  },
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "ประเด็นร้อน (สำเนา)",
+    "topic": "หนุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น ควงมีดแทงดับ",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "./assets/head/top-bar-red.png",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "ประเด็นร้อน"
+      },
+      {
+        "field": "f1",
+        "value": "ห���ุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น ควงมีดแทงดับ"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": "./assets/head/top-bar-red.png"
+      }
+    ],
+    "customFields": []
+  },
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "สัมภาษณ์ทางโทรศัพท์",
+    "topic": "\"ฮั้ว สว.\" ยังไม่จบ \"บิ๊กฝ่ายการเมือง\" อาจต้องไปศาล?",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "./assets/head/top-bar-gray.png",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "สัมภาษณ์ทางโทรศัพท์"
+      },
+      {
+        "field": "f1",
+        "value": "\"ฮั้ว สว.\" ยังไม่จบ \"บิ๊กฝ่ายการเมือง\" อาจต้องไปศาล?"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": "./assets/head/top-bar-gray.png"
+      }
+    ],
+    "customFields": []
+  },
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "ประเด็นร้อน",
+    "topic": "หนุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "./assets/head/top-bar-red.png",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "ประเด็นร้อน"
+      },
+      {
+        "field": "f1",
+        "value": "หนุ่มมีเมียแล้ว หึงกิ๊กปันใจชายอื่น"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": "./assets/head/top-bar-red.png"
+      }
+    ],
+    "customFields": []
   },
   {
     "itemID": "mainbar",
@@ -83,5 +184,113 @@
         "value": ""
       }
     ]
+  },
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "ประเด็นร้อน",
+    "topic": "test",
+    "line1": "",
+    "line2": "",
+    "name1": "",
+    "name2": "",
+    "logo": "",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "./assets/head/top-bar-red.png",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "ประเด็นร้อน"
+      },
+      {
+        "field": "f1",
+        "value": "test"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": "./assets/head/top-bar-red.png"
+      }
+    ]
+  },
+  {
+    "itemID": "bar2line",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "",
+    "topic": "Top Line 001 / Top Line 001",
+    "line1": "Top Line 001",
+    "line2": "Top Line 001",
+    "name1": "",
+    "name2": "",
+    "logo": "",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": ""
+      },
+      {
+        "field": "line1",
+        "value": "Top Line 001"
+      },
+      {
+        "field": "line2",
+        "value": "Top Line 001"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "itemID": "bar2line",
+    "relpath": "Example/New-bar4.html",
+    "webplayout": "1",
+    "out": "manual",
+    "head": "สัมภาษณ์ทางโทรศัพท์",
+    "topic": "Top Line 002 / Bottom Line 002",
+    "line1": "Top Line 002",
+    "line2": "Bottom Line 002",
+    "name1": "",
+    "name2": "",
+    "logo": "",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "สัมภาษณ์ทางโทรศัพท์"
+      },
+      {
+        "field": "line1",
+        "value": "Top Line 002"
+      },
+      {
+        "field": "line2",
+        "value": "Bottom Line 002"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": ""
+      }
+    ],
+    "customFields": []
   }
 ]

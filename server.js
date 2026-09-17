@@ -56,11 +56,15 @@ function scanAssetFolder(folderSubpath) {
 function getConfig() {
   let defaultConfig = {
     itemTypes: [
+      { label: "Logo บาร์ (logo)", value: "logo" },
       { label: "บาร์ประเด็น (mainbar)", value: "mainbar" },
-      { label: "บาร์ชื่อ-ตำแหน่ง (bar2line)", value: "bar2line" }
+      { label: "บาร์ 2 บรรทัด (bar2line)", value: "bar2line" },
+      { label: "บาร์พิธีกร 2 คน (bar2name)", value: "bar2name" }
     ],
+    presetHeads: ["ประเด็นร้อน", "สถานการณ์เด่น", "สัมภาษณ์ทางโทรศัพท์"],
     mainbarOptions: [],
     headbarOptions: [],
+    logoOptions: [],
     spxApiUrl: "http://localhost:5656/api/v1",
     endpointUrl: "http://localhost:8080/mainbar"
   };
@@ -71,6 +75,7 @@ function getConfig() {
       if (raw.trim()) {
         const parsed = JSON.parse(raw);
         if (parsed.itemTypes && Array.isArray(parsed.itemTypes)) defaultConfig.itemTypes = parsed.itemTypes;
+        if (parsed.presetHeads && Array.isArray(parsed.presetHeads)) defaultConfig.presetHeads = parsed.presetHeads;
         if (parsed.spxApiUrl) defaultConfig.spxApiUrl = parsed.spxApiUrl;
         if (parsed.endpointUrl) defaultConfig.endpointUrl = parsed.endpointUrl;
       }
@@ -82,6 +87,7 @@ function getConfig() {
   // ALWAYS scan fresh assets from disk to detect new, renamed, or removed files
   defaultConfig.mainbarOptions = scanAssetFolder('./assets/bar');
   defaultConfig.headbarOptions = scanAssetFolder('./assets/head');
+  defaultConfig.logoOptions = scanAssetFolder('./assets/logo');
 
   return defaultConfig;
 }
@@ -192,6 +198,7 @@ const server = http.createServer((req, res) => {
         const payload = JSON.parse(body);
         payload.mainbarOptions = scanAssetFolder('./assets/bar');
         payload.headbarOptions = scanAssetFolder('./assets/head');
+        payload.logoOptions = scanAssetFolder('./assets/logo');
 
         fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
         fs.writeFileSync(CONFIG_FILE, JSON.stringify(payload, null, 2), 'utf8');
@@ -217,8 +224,15 @@ const server = http.createServer((req, res) => {
         activeItemsMap[itemID] = {
           head: payload.head !== undefined ? payload.head : (payload.data ? payload.data.head : ''),
           topic: payload.topic !== undefined ? payload.topic : (payload.data ? payload.data.topic : ''),
+          line1: payload.line1 !== undefined ? payload.line1 : (payload.data ? payload.data.line1 : ''),
+          line2: payload.line2 !== undefined ? payload.line2 : (payload.data ? payload.data.line2 : ''),
+          name1: payload.name1 !== undefined ? payload.name1 : (payload.data ? payload.data.name1 : ''),
+          name2: payload.name2 !== undefined ? payload.name2 : (payload.data ? payload.data.name2 : ''),
+          logo: payload.logo !== undefined ? payload.logo : (payload.data ? payload.data.logo : ''),
           mainbar: payload.mainbar !== undefined ? payload.mainbar : './assets/bar/MAIN BAR.png',
-          headbar: payload.headbar !== undefined ? payload.headbar : ''
+          headbar: payload.headbar !== undefined ? payload.headbar : '',
+          ...(payload.data || {}),
+          ...payload
         };
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ status: 'ok', itemID, activeData: activeItemsMap[itemID] }));

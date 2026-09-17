@@ -9,6 +9,7 @@ export class ControllerView {
     this.showToast = showToast;
     this.selectedItemIndex = 0;
 
+    this.isLogoOnAir = false;
     this.render();
     this.subscribeStore();
   }
@@ -16,10 +17,11 @@ export class ControllerView {
   subscribeStore() {
     this.store.subscribe('items', (items) => this.renderPlaylist(items));
     this.store.subscribe('activeOnAirItem', () => this.renderPlaylist(this.store.getState().items));
+    this.store.subscribe('config', (config) => this.populateLogoSelect(config));
   }
 
   render() {
-    const { items } = this.store.getState();
+    const { items, config } = this.store.getState();
 
     this.container.innerHTML = `
       <div class="controller-desk">
@@ -84,18 +86,43 @@ export class ControllerView {
             </div>
           </div>
 
+          <!-- Dedicated CG Logo Control Section -->
           <div class="card p-3">
-            <h4 class="fs-sm mb-2 text-secondary">JSON Payload Preview</h4>
-            <pre class="json-preview-box" id="ctrl-json-preview">{}</pre>
+            <div class="flex-between mb-2">
+              <h4 class="fs-sm text-secondary mb-0 fw-700">ส่วนควบคุม CG Logo</h4>
+              <span class="badge badge-neutral" id="ctrl-logo-status-pill">OFF-AIR</span>
+            </div>
+            
+            <div class="form-group mb-3">
+              <label class="form-label fs-xs" for="ctrl-logo-select">เลือกรูปภาพ Logo (จาก ./assets/logo)</label>
+              <select class="form-control form-control-sm" id="ctrl-logo-select">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button class="btn btn-sm btn-play" id="btn-play-logo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                PLAY LOGO
+              </button>
+              <button class="btn btn-sm btn-stop" id="btn-stop-logo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12"></rect></svg>
+                STOP LOGO
+              </button>
+            </div>
           </div>
         </aside>
       </div>
     `;
 
-    // Bind Controls
+    // Bind Main Controls
     document.getElementById('btn-big-play').addEventListener('click', () => this.triggerPlay());
     document.getElementById('btn-big-next').addEventListener('click', () => this.triggerNext());
     document.getElementById('btn-big-stop').addEventListener('click', () => this.triggerStop());
+
+    // Bind Logo Controls
+    document.getElementById('btn-play-logo').addEventListener('click', () => this.triggerPlayLogo());
+    document.getElementById('btn-stop-logo').addEventListener('click', () => this.triggerStopLogo());
 
     document.getElementById('btn-focus-first').addEventListener('click', () => this.selectIndex(0));
     document.getElementById('btn-focus-prev').addEventListener('click', () => this.selectIndex(Math.max(0, this.selectedItemIndex - 1)));
@@ -108,6 +135,7 @@ export class ControllerView {
       this.selectIndex(items.length - 1);
     });
 
+    this.populateLogoSelect(config);
     this.renderPlaylist(items);
   }
 
@@ -152,6 +180,94 @@ export class ControllerView {
     }
   }
 
+  populateLogoSelect(config) {
+    const logoSelect = document.getElementById('ctrl-logo-select');
+    if (!logoSelect) return;
+    const currentVal = logoSelect.value;
+    logoSelect.innerHTML = '';
+
+    const options = (config && config.logoOptions && Array.isArray(config.logoOptions) && config.logoOptions.length > 0)
+      ? config.logoOptions
+      : [{ label: 'LOGO คมชัดลึก 2026.png', value: './assets/logo/LOGO คมชัดลึก 2026.png' }];
+
+    options.forEach(optData => {
+      const opt = document.createElement('option');
+      opt.value = optData.value;
+      opt.textContent = optData.label || optData.value;
+      logoSelect.appendChild(opt);
+    });
+
+    if (currentVal && Array.from(logoSelect.options).some(o => o.value === currentVal)) {
+      logoSelect.value = currentVal;
+    }
+  }
+
+  async triggerPlayLogo() {
+    const logoSelect = document.getElementById('ctrl-logo-select');
+    const selectedLogo = logoSelect ? logoSelect.value : '';
+    if (!selectedLogo) {
+      this.showToast('กรุณาเลือกไฟล์ Logo ก่อนสั่งเล่น', 'warning');
+      return;
+    }
+
+    const logoItem = {
+      itemID: 'logo',
+      logo: selectedLogo,
+      head: 'LOGO CG',
+      topic: `Logo: ${selectedLogo.split('/').pop()}`,
+      relpath: 'Example/New-bar4.html',
+      webplayout: '1',
+      out: 'manual'
+    };
+
+    try {
+      await this.api.setActiveItem(logoItem);
+      await this.api.playItem('logo');
+      await this.api.directPlayout({
+        command: 'play',
+        relativeTemplatePath: logoItem.relpath,
+        webplayoutLayer: '1',
+        out: 'manual',
+        DataFields: [{ field: 'logo', value: selectedLogo }]
+      }).catch(() => null);
+
+      this.isLogoOnAir = true;
+      this.updateLogoUI();
+      this.showToast(`▶ PLAY LOGO: ${selectedLogo.split('/').pop()}`, 'success');
+    } catch (err) {
+      this.showToast(`เล่น Logo ล้มเหลว: ${err.message}`, 'danger');
+    }
+  }
+
+  async triggerStopLogo() {
+    try {
+      await this.api.stopItem('logo');
+      await this.api.directPlayout({
+        command: 'stop',
+        webplayoutLayer: '1'
+      }).catch(() => null);
+
+      this.isLogoOnAir = false;
+      this.updateLogoUI();
+      this.showToast(`⏹ STOP LOGO: หยุดแสดงผล Logo`, 'info');
+    } catch (err) {
+      this.showToast(`Stop Logo ล้มเหลว: ${err.message}`, 'danger');
+    }
+  }
+
+  updateLogoUI() {
+    const logoPill = document.getElementById('ctrl-logo-status-pill');
+    if (!logoPill) return;
+
+    if (this.isLogoOnAir) {
+      logoPill.className = 'badge badge-success';
+      logoPill.textContent = '● ON-AIR';
+    } else {
+      logoPill.className = 'badge badge-neutral';
+      logoPill.textContent = 'OFF-AIR';
+    }
+  }
+
   async triggerNext() {
     const activeItem = this.store.getState().activeOnAirItem;
     const itemID = activeItem ? activeItem.itemID : 'mainbar';
@@ -178,7 +294,6 @@ export class ControllerView {
   renderPlaylist(items) {
     const container = document.getElementById('ctrl-playlist-items');
     const detailsContainer = document.getElementById('ctrl-item-details');
-    const jsonPreview = document.getElementById('ctrl-json-preview');
     const selectedBadge = document.getElementById('ctrl-selected-id');
 
     if (!container) return;
@@ -200,22 +315,38 @@ export class ControllerView {
     }
 
     if (selectedItem && detailsContainer) {
-      detailsContainer.innerHTML = `
-        <div><strong>itemID:</strong> <code>${selectedItem.itemID}</code></div>
-        <div><strong>Head:</strong> ${selectedItem.head}</div>
-        <div><strong>Topic:</strong> ${selectedItem.topic}</div>
-        <div><strong>Mainbar:</strong> <code>${selectedItem.mainbar}</code></div>
-        <div><strong>Headbar:</strong> <code>${selectedItem.headbar}</code></div>
-      `;
+      const itemID = selectedItem.itemID || 'mainbar';
+      let detailsHtml = `<div><strong>itemID:</strong> <code>${selectedItem.itemID}</code></div>`;
 
-      if (jsonPreview) {
-        jsonPreview.textContent = JSON.stringify({
-          head: selectedItem.head,
-          topic: selectedItem.topic,
-          mainbar: selectedItem.mainbar,
-          headbar: selectedItem.headbar
-        }, null, 2);
+      if (itemID === 'logo') {
+        detailsHtml += `<div><strong>Logo:</strong> <code>${selectedItem.logo || '-'}</code></div>`;
+      } else if (itemID === 'bar2line') {
+        detailsHtml += `
+          <div><strong>Head:</strong> ${selectedItem.head || '-'}</div>
+          <div><strong>Line 1:</strong> ${selectedItem.line1 || '-'}</div>
+          <div><strong>Line 2:</strong> ${selectedItem.line2 || '-'}</div>
+          <div><strong>Mainbar:</strong> <code>${selectedItem.mainbar || '-'}</code></div>
+          <div><strong>Headbar:</strong> <code>${selectedItem.headbar || 'none'}</code></div>
+        `;
+      } else if (itemID === 'bar2name') {
+        detailsHtml += `
+          <div><strong>Head:</strong> ${selectedItem.head || '-'}</div>
+          <div><strong>Name Left:</strong> ${selectedItem.name1 || '-'}</div>
+          <div><strong>Name Right:</strong> ${selectedItem.name2 || '-'}</div>
+          <div><strong>Position:</strong> ${selectedItem.line2 || '-'}</div>
+          <div><strong>Mainbar:</strong> <code>${selectedItem.mainbar || '-'}</code></div>
+          <div><strong>Headbar:</strong> <code>${selectedItem.headbar || 'none'}</code></div>
+        `;
+      } else {
+        detailsHtml += `
+          <div><strong>Head:</strong> ${selectedItem.head || '-'}</div>
+          <div><strong>Topic:</strong> ${selectedItem.topic || '-'}</div>
+          <div><strong>Mainbar:</strong> <code>${selectedItem.mainbar || '-'}</code></div>
+          <div><strong>Headbar:</strong> <code>${selectedItem.headbar || 'none'}</code></div>
+        `;
       }
+
+      detailsContainer.innerHTML = detailsHtml;
     }
 
     container.innerHTML = '';
@@ -223,11 +354,25 @@ export class ControllerView {
 
     items.forEach((item, idx) => {
       const isSelected = idx === this.selectedItemIndex;
-      const isOnAir = activeOnAirItem && (activeOnAirItem.head === item.head && activeOnAirItem.topic === item.topic);
+      const isOnAir = activeOnAirItem && (activeOnAirItem.itemID === item.itemID && activeOnAirItem.topic === item.topic && activeOnAirItem.head === item.head);
 
       const el = document.createElement('div');
       el.className = `playlist-item ${isSelected ? 'selected' : ''} ${isOnAir ? 'onair' : ''}`;
       el.setAttribute('draggable', 'true');
+
+      const itemID = item.itemID || 'mainbar';
+      let headDisplay = item.head || '';
+      let topicDisplay = item.topic || '';
+      if (itemID === 'logo') {
+        headDisplay = item.head ? `${item.head} (Logo)` : 'Logo CG';
+        topicDisplay = `Logo: ${item.logo || '-'}`;
+      } else if (itemID === 'bar2line') {
+        headDisplay = item.head ? `${item.head} (บาร์ 2 บรรทัด)` : 'บาร์ 2 บรรทัด';
+        topicDisplay = `L1: ${item.line1 || '-'} | L2: ${item.line2 || '-'}`;
+      } else if (itemID === 'bar2name') {
+        headDisplay = item.head ? `${item.head} (บาร์พิธีกร 2 คน)` : 'บาร์พิธีกร 2 คน';
+        topicDisplay = `พิธีกร: ${item.name1 || '-'} & ${item.name2 || '-'} (${item.line2 || '-'})`;
+      }
 
       el.innerHTML = `
         <div class="flex-center gap-2">
@@ -240,8 +385,8 @@ export class ControllerView {
           </div>
           <span class="fw-700 text-muted font-mono">#${idx + 1}</span>
           <div>
-            <div class="fw-700 text-primary">${item.head || '(ไม่มีหัวเรื่อง)'}</div>
-            <div class="fs-xs text-secondary">${item.topic}</div>
+            <div class="fw-700 text-primary">${headDisplay}</div>
+            <div class="fs-xs text-secondary">${topicDisplay}</div>
           </div>
         </div>
         <div class="flex-center gap-2">

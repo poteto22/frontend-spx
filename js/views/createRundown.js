@@ -133,6 +133,32 @@ export class CreateRundownView {
       row.className = 'item-row-card';
       row.setAttribute('draggable', 'true');
 
+      const itemID = item.itemID || 'mainbar';
+      let headDisplay = item.head || '';
+      let topicDisplay = item.topic || '';
+      let assetsDisplay = '';
+
+      if (itemID === 'logo') {
+        headDisplay = item.head ? `${item.head} (Logo)` : 'Logo CG';
+        topicDisplay = `Logo Asset: ${item.logo || '-'}`;
+        assetsDisplay = `<span><strong>Logo:</strong> <code>${item.logo || '-'}</code></span>`;
+      } else if (itemID === 'bar2line') {
+        headDisplay = item.head ? `${item.head} (บาร์ 2 บรรทัด)` : 'บาร์ 2 บรรทัด';
+        topicDisplay = `[L1] ${item.line1 || '-'}  |  [L2] ${item.line2 || '-'}`;
+        assetsDisplay = `<span><strong>Main Bar:</strong> <code>${item.mainbar || '-'}</code></span>
+                         <span><strong>Head Bar:</strong> <code>${item.headbar || 'none'}</code></span>`;
+      } else if (itemID === 'bar2name') {
+        headDisplay = item.head ? `${item.head} (บาร์พิธีกร 2 คน)` : 'บาร์พิธีกร 2 คน';
+        topicDisplay = `พิธีกร: ${item.name1 || '-'} & ${item.name2 || '-'} (${item.line2 || '-'})`;
+        assetsDisplay = `<span><strong>Main Bar:</strong> <code>${item.mainbar || '-'}</code></span>
+                         <span><strong>Head Bar:</strong> <code>${item.headbar || 'none'}</code></span>`;
+      } else {
+        headDisplay = item.head || '(ไม่มีหัวเรื่อง Top Bar)';
+        topicDisplay = item.topic || '(ไม่มีข้อความประเด็น)';
+        assetsDisplay = `<span><strong>Main Bar:</strong> <code>${item.mainbar || '-'}</code></span>
+                         <span><strong>Head Bar:</strong> <code>${item.headbar || 'none'}</code></span>`;
+      }
+
       row.innerHTML = `
         <div class="drag-handle" title="ลากเพื่อเปลี่ยนลำดับ" style="cursor: grab; display: flex; align-items: center; color: var(--text-muted); padding: 4px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -146,11 +172,10 @@ export class CreateRundownView {
           <span class="badge badge-info">ID: ${item.itemID}</span>
         </div>
         <div class="item-row-main">
-          <div class="item-row-head">${item.head || '(ไม่มีหัวเรื่อง)'}</div>
-          <div class="item-row-topic">${item.topic}</div>
+          <div class="item-row-head">${headDisplay}</div>
+          <div class="item-row-topic">${topicDisplay}</div>
           <div class="item-row-assets">
-            <span><strong>Main Bar:</strong> <code>${item.mainbar}</code></span>
-            <span><strong>Head Bar:</strong> <code>${item.headbar}</code></span>
+            ${assetsDisplay}
           </div>
         </div>
         <div class="item-row-actions">
@@ -162,15 +187,27 @@ export class CreateRundownView {
         </div>
       `;
 
-      row.querySelector('.btn-edit').addEventListener('click', () => this.editorDialog.openForEdit(index));
-      row.querySelector('.btn-dup').addEventListener('click', () => {
+      row.querySelector('.btn-edit').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.editorDialog.openForEdit(index);
+      });
+      row.querySelector('.btn-dup').addEventListener('click', (e) => {
+        e.stopPropagation();
         this.store.duplicateItem(index);
         this.showToast('คัดลอกรายการ CG เรียบร้อยแล้ว', 'info');
       });
-      row.querySelector('.btn-up').addEventListener('click', () => this.store.moveItem(index, index - 1));
-      row.querySelector('.btn-down').addEventListener('click', () => this.store.moveItem(index, index + 1));
-      row.querySelector('.btn-del').addEventListener('click', () => {
-        if (confirm(`ลบรายการ "${item.head || item.topic}"?`)) {
+      row.querySelector('.btn-up').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.store.moveItem(index, index - 1);
+      });
+      row.querySelector('.btn-down').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.store.moveItem(index, index + 1);
+      });
+      row.querySelector('.btn-del').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const displayTitle = item.head || item.topic || item.line1 || item.name1 || (item.logo ? item.logo.split('/').pop() : '') || `รายการ #${index + 1}`;
+        if (confirm(`คุณต้องการลบรายการ "${displayTitle}" หรือไม่?`)) {
           this.store.deleteItem(index);
           this.showToast('ลบรายการ CG แล้ว', 'info');
         }

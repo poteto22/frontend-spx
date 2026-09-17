@@ -23,8 +23,15 @@ export class Store {
 
       config: {
         itemTypes: [
+          { label: "Logo บาร์ (logo)", value: "logo" },
           { label: "บาร์ประเด็น (mainbar)", value: "mainbar" },
-          { label: "บาร์ชื่อ-ตำแหน่ง (bar2line)", value: "bar2line" }
+          { label: "บาร์ 2 บรรทัด (bar2line)", value: "bar2line" },
+          { label: "บาร์พิธีกร 2 คน (bar2name)", value: "bar2name" }
+        ],
+        presetHeads: [
+          "ประเด็นร้อน",
+          "สถานการณ์เด่น",
+          "สัมภาษณ์ทางโทรศัพท์"
         ],
         mainbarOptions: [
           { label: "MAIN BAR.png", value: "./assets/bar/MAIN BAR.png" }
@@ -35,7 +42,8 @@ export class Store {
           { label: "top-bar-2.png", value: "./assets/head/top-bar-2.png" },
           { label: "top-bar-3.png", value: "./assets/head/top-bar-3.png" },
           { label: "top-bar-4.png", value: "./assets/head/top-bar-4.png" }
-        ]
+        ],
+        logoOptions: []
       },
       
       items: [
@@ -206,6 +214,36 @@ export class Store {
     }
   }
 
+  generateDataFields(item, customFields = []) {
+    const itemID = item.itemID || 'mainbar';
+    let fields = [];
+
+    if (itemID === 'logo') {
+      fields.push({ field: 'logo', value: item.logo || '' });
+    } else if (itemID === 'bar2line') {
+      fields.push({ field: 'f0', value: item.head || '' });
+      fields.push({ field: 'line1', value: item.line1 || '' });
+      fields.push({ field: 'line2', value: item.line2 || '' });
+      fields.push({ field: 'mainbar', value: item.mainbar || './assets/bar/MAIN BAR.png' });
+      fields.push({ field: 'headbar', value: item.headbar || '' });
+    } else if (itemID === 'bar2name') {
+      fields.push({ field: 'f0', value: item.head || '' });
+      fields.push({ field: 'name1', value: item.name1 || '' });
+      fields.push({ field: 'name2', value: item.name2 || '' });
+      fields.push({ field: 'line2', value: item.line2 || '' });
+      fields.push({ field: 'mainbar', value: item.mainbar || './assets/bar/MAIN BAR.png' });
+      fields.push({ field: 'headbar', value: item.headbar || '' });
+    } else {
+      // Default: mainbar
+      fields.push({ field: 'f0', value: item.head || '' });
+      fields.push({ field: 'f1', value: item.topic || '' });
+      fields.push({ field: 'mainbar', value: item.mainbar || './assets/bar/MAIN BAR.png' });
+      fields.push({ field: 'headbar', value: item.headbar || '' });
+    }
+
+    return [...fields, ...customFields];
+  }
+
   addItem(itemData) {
     const newItem = {
       itemID: itemData.itemID || 'mainbar',
@@ -214,15 +252,15 @@ export class Store {
       out: itemData.out || 'manual',
       head: itemData.head !== undefined ? itemData.head : '',
       topic: itemData.topic !== undefined ? itemData.topic : '',
+      line1: itemData.line1 !== undefined ? itemData.line1 : '',
+      line2: itemData.line2 !== undefined ? itemData.line2 : '',
+      name1: itemData.name1 !== undefined ? itemData.name1 : '',
+      name2: itemData.name2 !== undefined ? itemData.name2 : '',
+      logo: itemData.logo !== undefined ? itemData.logo : '',
       mainbar: itemData.mainbar !== undefined ? itemData.mainbar : './assets/bar/MAIN BAR.png',
       headbar: itemData.headbar !== undefined ? itemData.headbar : '',
-      DataFields: itemData.DataFields || [
-        { field: 'f0', value: itemData.head !== undefined ? itemData.head : '' },
-        { field: 'f1', value: itemData.topic !== undefined ? itemData.topic : '' },
-        { field: 'mainbar', value: itemData.mainbar !== undefined ? itemData.mainbar : './assets/bar/MAIN BAR.png' },
-        { field: 'headbar', value: itemData.headbar !== undefined ? itemData.headbar : '' }
-      ]
     };
+    newItem.DataFields = itemData.DataFields || this.generateDataFields(newItem, itemData.customFields || []);
 
     const newItems = [...this.state.items, newItem];
     this.setState({ items: newItems });
@@ -236,22 +274,22 @@ export class Store {
 
     newItems[index].head = newItems[index].head !== undefined ? newItems[index].head : '';
     newItems[index].headbar = newItems[index].headbar !== undefined ? newItems[index].headbar : '';
-
-    newItems[index].DataFields = [
-      { field: 'f0', value: newItems[index].head },
-      { field: 'f1', value: newItems[index].topic },
-      { field: 'mainbar', value: newItems[index].mainbar },
-      { field: 'headbar', value: newItems[index].headbar },
-      ...(updatedFields.customFields || [])
-    ];
+    newItems[index].DataFields = this.generateDataFields(newItems[index], updatedFields.customFields || []);
 
     this.setState({ items: newItems });
   }
 
   deleteItem(index) {
     if (index < 0 || index >= this.state.items.length) return;
+    const itemToDelete = this.state.items[index];
     const newItems = this.state.items.filter((_, i) => i !== index);
-    this.setState({ items: newItems });
+
+    let activeOnAirItem = this.state.activeOnAirItem;
+    if (activeOnAirItem && (activeOnAirItem === itemToDelete || (activeOnAirItem.itemID === itemToDelete.itemID && activeOnAirItem.head === itemToDelete.head && activeOnAirItem.topic === itemToDelete.topic))) {
+      activeOnAirItem = null;
+    }
+
+    this.setState({ items: newItems, activeOnAirItem });
   }
 
   moveItem(fromIndex, toIndex) {

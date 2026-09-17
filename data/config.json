@@ -1,12 +1,20 @@
 {
   "itemTypes": [
     {
-      "label": "บาร์ประเด็น",
+      "label": "Logo บาร์ (logo)",
+      "value": "logo"
+    },
+    {
+      "label": "บาร์ประเด็น (mainbar)",
       "value": "mainbar"
     },
     {
-      "label": "บาร์ชื่อ-ตำแหน่ง",
+      "label": "บาร์ 2 บรรทัด (bar2line)",
       "value": "bar2line"
+    },
+    {
+      "label": "บาร์พิธีกร 2 คน (bar2name)",
+      "value": "bar2name"
     }
   ],
   "mainbarOptions": [

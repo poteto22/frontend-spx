@@ -117,88 +117,151 @@
     <dialog class="modal-dialog" id="item-editor-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 id="editor-dialog-title">เพิ่ม / แก้ไข รายการ CG</h3>
+          <h3 id="editor-dialog-title">สร้างรายการ CG ใหม่</h3>
           <button class="btn-icon" id="btn-close-editor-modal">&times;</button>
         </div>
         <div class="modal-body">
           <form id="item-editor-form" onsubmit="return false;">
             <input type="hidden" id="edit-item-index" value="-1">
             
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label" for="edit-item-id">ชนิด CG (itemID)</label>
-                <select class="form-control" id="edit-item-id" required>
-                  <option value="mainbar">บาร์ประเด็น (mainbar)</option>
-                  <option value="bar2line">บาร์ชื่อ-ตำแหน่ง (bar2line)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="edit-item-template">Template File Path</label>
-                <input type="text" class="form-control font-mono" id="edit-item-template" value="Example/New-bar4.html" placeholder="e.g. Example/New-bar4.html" required>
-              </div>
-
-              <!-- Head input: optional (no required attribute) -->
-              <div class="form-group full-width">
-                <label class="form-label" for="edit-item-head">Head (หัวเรื่อง - เว้นว่างได้)</label>
-                <input type="text" class="form-control" id="edit-item-head" placeholder="e.g. ข่าวเด่นวันนี้ (เว้นว่างได้)">
-              </div>
-
-              <div class="form-group full-width">
-                <label class="form-label" for="edit-item-topic">Topic (หัวข้อย่อย)</label>
-                <textarea class="form-control" id="edit-item-topic" rows="2" placeholder="e.g. มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ" required></textarea>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="edit-item-mainbar">Main Bar Image (รูปภาพ Main Bar)</label>
-                <select class="form-control" id="edit-item-mainbar">
-                  <option value="./assets/bar/MAIN BAR.png">MAIN BAR.png</option>
-                </select>
-              </div>
-
-              <!-- Headbar select: supports empty value option -->
-              <div class="form-group">
-                <label class="form-label" for="edit-item-headbar">Head Bar Image (รูปภาพ Head Bar)</label>
-                <select class="form-control" id="edit-item-headbar">
-                  <option value="">none (ไม่เลือก / เว้นว่าง)</option>
-                  <option value="./assets/head/top-bar-1.png">top-bar-1.png</option>
-                  <option value="./assets/head/top-bar-2.png">top-bar-2.png</option>
-                  <option value="./assets/head/top-bar-3.png">top-bar-3.png</option>
-                  <option value="./assets/head/top-bar-4.png">top-bar-4.png</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="edit-item-layer">Webplayout Layer</label>
-                <input type="number" class="form-control" id="edit-item-layer" value="1" min="1" max="100">
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="edit-item-out">Out Mode</label>
-                <select class="form-control" id="edit-item-out">
-                  <option value="manual">Manual (กดหยุดเอง)</option>
-                  <option value="3000">3 วินาที Auto-Out</option>
-                  <option value="5000">5 วินาที Auto-Out</option>
-                  <option value="10000">10 วินาที Auto-Out</option>
-                </select>
-              </div>
+            <!-- STEP 1: Select CG Type -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-600 fs-md" for="edit-item-id">
+                <span class="step-badge">1</span> เลือกประเภทของ CG
+              </label>
+              <select class="form-control form-control-lg" id="edit-item-id">
+                <option value="">-- กรุณาเลือกประเภท CG --</option>
+                <option value="logo">1. Logo บาร์ (logo)</option>
+                <option value="mainbar">2. บาร์ประเด็น (mainbar)</option>
+                <option value="bar2line">3. บาร์ 2 บรรทัด (bar2line)</option>
+                <option value="bar2name">4. บาร์พิธีกร 2 คน (bar2name)</option>
+              </select>
             </div>
 
-            <!-- Additional Custom DataFields -->
-            <div class="datafields-section mt-4">
-              <div class="section-header flex-between">
-                <span class="fw-600 fs-sm">ข้อมูลเพิ่มเติม (Additional JSON Key-Values)</span>
-                <button type="button" class="btn btn-xs btn-outline" id="btn-editor-add-field">+ เพิ่ม Field</button>
+            <!-- STEP 2: Progressive Dynamic Form Fields -->
+            <div id="editor-step-fields" class="editor-fields-container hidden">
+              
+              <!-- Top Bar Text & Presets (For mainbar, bar2line, bar2name) -->
+              <div id="section-head" class="form-group full-width mb-3">
+                <label class="form-label" for="edit-item-head">Top Bar (เว้นว่างได้)</label>
+                <input type="text" class="form-control" id="edit-item-head" placeholder="e.g. ประเด็นร้อน (เว้นว่างได้)">
+                
+                <!-- Quick Preset Tags -->
+                <div class="preset-head-container mt-2">
+                  <span class="fs-xs text-muted mr-1">ข้อความที่ใช้บ่อย:</span>
+                  <div class="preset-head-tags" id="preset-head-tags">
+                    <!-- Dynamic Preset Buttons -->
+                  </div>
+                </div>
               </div>
-              <div class="datafields-list mt-2" id="editor-datafields-list">
-                <!-- Custom fields -->
+
+              <!-- DYNAMIC GROUP 1: Logo (logo) -->
+              <div id="fields-logo" class="cg-type-group hidden">
+                <div class="form-group full-width">
+                  <label class="form-label" for="edit-item-logo">Logo (จำเป็นต้องมีข้อมูล)</label>
+                  <select class="form-control" id="edit-item-logo">
+                    <!-- Populated dynamically from ./assets/logo -->
+                  </select>
+                </div>
               </div>
+
+              <!-- DYNAMIC GROUP 2: บาร์ประเด็น (mainbar) -->
+              <div id="fields-mainbar" class="cg-type-group hidden">
+                <div class="form-group full-width">
+                  <label class="form-label" for="edit-item-topic">Topic (จำเป็นต้องมีข้อมูล)</label>
+                  <textarea class="form-control" id="edit-item-topic" rows="2" placeholder="e.g. มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ"></textarea>
+                </div>
+              </div>
+
+              <!-- DYNAMIC GROUP 3: บาร์ 2 บรรทัด (bar2line) -->
+              <div id="fields-bar2line" class="cg-type-group hidden">
+                <div class="form-grid">
+                  <div class="form-group full-width">
+                    <label class="form-label" for="edit-item-line1">Line Top (บรรทัดบน - จำเป็นต้องมีข้อมูล)</label>
+                    <input type="text" class="form-control" id="edit-item-line1" placeholder="e.g. หัวข้อบรรทัดบน">
+                  </div>
+                  <div class="form-group full-width">
+                    <label class="form-label" for="edit-item-line2-bar2line">Line Bottom (บรรทัดล่าง - จำเป็นต้องมีข้อมูล)</label>
+                    <input type="text" class="form-control" id="edit-item-line2-bar2line" placeholder="e.g. ข้อความบรรทัดล่าง">
+                  </div>
+                </div>
+              </div>
+
+              <!-- DYNAMIC GROUP 4: บาร์พิธีกร 2 คน (bar2name) -->
+              <div id="fields-bar2name" class="cg-type-group hidden">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="edit-item-name1">Name Left (ชื่อคนซ้าย - จำเป็นต้องมีข้อมูล)</label>
+                    <input type="text" class="form-control" id="edit-item-name1" placeholder="e.g. นายสมชาย ใจดี">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="edit-item-name2">Name Right (ชื่อคนขวา - จำเป็นต้องมีข้อมูล)</label>
+                    <input type="text" class="form-control" id="edit-item-name2" placeholder="e.g. นางสาวสมหญิง รักสงบ">
+                  </div>
+                  <div class="form-group full-width">
+                    <label class="form-label" for="edit-item-line2-bar2name">ตำแหน่งพิธีกร (จำเป็นต้องมีข้อมูล)</label>
+                    <input type="text" class="form-control" id="edit-item-line2-bar2name" placeholder="e.g. ผู้ดำเนินรายการ / ผู้ประกาศข่าว">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Image Options (Main Bar & Top Bar Image) -->
+              <div id="section-bar-assets" class="form-grid mt-3">
+                <div class="form-group">
+                  <label class="form-label" for="edit-item-mainbar">Main Bar Image (รูปภาพ Main Bar)</label>
+                  <select class="form-control" id="edit-item-mainbar">
+                    <option value="./assets/bar/BAR.png">BAR.png</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="edit-item-headbar">Top Bar Image (รูปภาพ Top Bar)</label>
+                  <select class="form-control" id="edit-item-headbar">
+                    <option value="">none (ไม่เลือก / เว้นว่าง)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Advanced Settings (Collapsible or Standard) -->
+              <details class="advanced-settings-details mt-4">
+                <summary class="fs-xs text-muted cursor-pointer font-semibold">⚙️ ตั้งค่าขั้นสูง (Template, Layer, Out Mode)</summary>
+                <div class="form-grid mt-3">
+                  <div class="form-group">
+                    <label class="form-label" for="edit-item-template">Template File Path</label>
+                    <input type="text" class="form-control font-mono" id="edit-item-template" value="Example/New-bar4.html">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="edit-item-layer">Webplayout Layer</label>
+                    <input type="number" class="form-control" id="edit-item-layer" value="1" min="1" max="100">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="edit-item-out">Out Mode</label>
+                    <select class="form-control" id="edit-item-out">
+                      <option value="manual">Manual (กดหยุดเอง)</option>
+                      <option value="3000">3 วินาที Auto-Out</option>
+                      <option value="5000">5 วินาที Auto-Out</option>
+                      <option value="10000">10 วินาที Auto-Out</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Additional Custom DataFields -->
+                <div class="datafields-section mt-3">
+                  <div class="section-header flex-between">
+                    <span class="fw-600 fs-xs text-muted">ข้อมูลเพิ่มเติม (Additional JSON Key-Values)</span>
+                    <button type="button" class="btn btn-xs btn-outline" id="btn-editor-add-field">+ เพิ่ม Field</button>
+                  </div>
+                  <div class="datafields-list mt-2" id="editor-datafields-list">
+                    <!-- Custom fields -->
+                  </div>
+                </div>
+              </details>
+
             </div>
           </form>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" id="btn-cancel-editor">ยกเลิก</button>
-          <button class="btn btn-primary" id="btn-save-editor-item">บันทึกรายการ</button>
+          <button class="btn btn-primary" id="btn-save-editor-item" disabled>บันทึกรายการ</button>
         </div>
       </div>
     </dialog>

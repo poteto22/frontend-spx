@@ -124,13 +124,25 @@ export class MainRundownView {
         onairBadge.style.backgroundColor = 'var(--accent-play)';
       }
       if (previewContent) {
+        const itemID = activeOnAirItem.itemID || 'mainbar';
+        let headDisplay = activeOnAirItem.head || '';
+        let topicDisplay = activeOnAirItem.topic || '';
+        if (itemID === 'logo') {
+          headDisplay = 'LOGO CG';
+          topicDisplay = `Logo: ${activeOnAirItem.logo || '-'}`;
+        } else if (itemID === 'bar2line') {
+          topicDisplay = `L1: ${activeOnAirItem.line1 || '-'} | L2: ${activeOnAirItem.line2 || '-'}`;
+        } else if (itemID === 'bar2name') {
+          topicDisplay = `พิธีกร: ${activeOnAirItem.name1 || '-'} & ${activeOnAirItem.name2 || '-'} (${activeOnAirItem.line2 || '-'})`;
+        }
+
         previewContent.innerHTML = `
-          <div class="onair-item-head">${activeOnAirItem.head}</div>
-          <div class="onair-item-topic">${activeOnAirItem.topic}</div>
+          <div class="onair-item-head">${headDisplay}</div>
+          <div class="onair-item-topic">${topicDisplay}</div>
           <div class="onair-meta">
             <span><strong>itemID:</strong> <code>${activeOnAirItem.itemID}</code></span>
-            <span><strong>Mainbar:</strong> ${activeOnAirItem.mainbar}</span>
-            <span><strong>Headbar:</strong> ${activeOnAirItem.headbar}</span>
+            <span><strong>Mainbar:</strong> ${activeOnAirItem.mainbar || '-'}</span>
+            <span><strong>Headbar:</strong> ${activeOnAirItem.headbar || 'none'}</span>
           </div>
         `;
       }
@@ -157,8 +169,22 @@ export class MainRundownView {
       listContainer.innerHTML = '';
       items.forEach((item, idx) => {
         const row = document.createElement('div');
-        const isOnAir = activeOnAirItem && (activeOnAirItem.head === item.head && activeOnAirItem.topic === item.topic);
+        const isOnAir = activeOnAirItem && (activeOnAirItem.itemID === item.itemID && activeOnAirItem.topic === item.topic && activeOnAirItem.head === item.head);
         row.className = `item-row-card ${isOnAir ? 'is-onair' : ''}`;
+
+        const itemID = item.itemID || 'mainbar';
+        let headDisplay = item.head || '';
+        let topicDisplay = item.topic || '';
+        if (itemID === 'logo') {
+          headDisplay = item.head ? `${item.head} (Logo)` : 'Logo CG';
+          topicDisplay = `Logo Asset: ${item.logo || '-'}`;
+        } else if (itemID === 'bar2line') {
+          headDisplay = item.head ? `${item.head} (บาร์ 2 บรรทัด)` : 'บาร์ 2 บรรทัด';
+          topicDisplay = `[L1] ${item.line1 || '-'} | [L2] ${item.line2 || '-'}`;
+        } else if (itemID === 'bar2name') {
+          headDisplay = item.head ? `${item.head} (บาร์พิธีกร 2 คน)` : 'บาร์พิธีกร 2 คน';
+          topicDisplay = `พิธีกร: ${item.name1 || '-'} & ${item.name2 || '-'} (${item.line2 || '-'})`;
+        }
 
         row.innerHTML = `
           <div class="item-row-index">#${idx + 1}</div>
@@ -169,11 +195,11 @@ export class MainRundownView {
             <div class="fs-xs font-mono text-muted mt-1">ID: ${item.itemID}</div>
           </div>
           <div class="item-row-main">
-            <div class="item-row-head">${item.head}</div>
-            <div class="item-row-topic">${item.topic}</div>
+            <div class="item-row-head">${headDisplay}</div>
+            <div class="item-row-topic">${topicDisplay}</div>
             <div class="item-row-assets">
-              <span>Mainbar: <code>${item.mainbar}</code></span> | 
-              <span>Headbar: <code>${item.headbar}</code></span>
+              <span>Mainbar: <code>${item.mainbar || '-'}</code></span> | 
+              <span>Headbar: <code>${item.headbar || 'none'}</code></span>
             </div>
           </div>
           <div class="item-row-actions">

@@ -32,7 +32,7 @@ export class SettingsView {
           <div class="card-header flex-between">
             <div>
               <h3>การตั้งค่าตัวเลือก CG & ไฟล์ config.json</h3>
-              <p class="text-muted fs-xs">จัดการตัวเลือก ชนิด CG (itemID), รูปภาพ Mainbar และ Headbar</p>
+              <p class="text-muted fs-xs">จัดการตัวเลือก ชนิด CG (itemID), ข้อความใช้บ่อย (Presets) และไฟล์รูปภาพ Assets</p>
             </div>
             <button class="btn btn-xs btn-outline" id="btn-reload-config">
               🔄 โหลดข้อมูลล่าสุด
@@ -50,15 +50,30 @@ export class SettingsView {
               </div>
             </div>
 
-            <!-- 2. Asset Choices Section -->
-            <div class="grid grid-cols-2 gap-4">
+            <!-- 2. Quick Preset Tags Section -->
+            <div class="mb-4">
+              <div class="flex-between mb-2">
+                <label class="form-label mb-0">รายการข้อความ Top Bar ที่ใช้บ่อย (Quick Presets)</label>
+                <button type="button" class="btn btn-xs btn-outline" id="btn-add-preset-head">+ เพิ่มข้อความ</button>
+              </div>
+              <div class="datafields-list" id="presets-container">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+
+            <!-- 3. Asset Choices Section (3 Columns: Mainbar, Headbar, Logo) -->
+            <div class="grid grid-cols-3 gap-3">
               <div>
-                <label class="form-label mb-1">ตัวเลือก Main Bar (จาก ./assets/bar)</label>
-                <ul class="fs-xs font-mono p-2 bg-slate-100 rounded border" id="mainbar-assets-list"></ul>
+                <label class="form-label mb-1">Main Bar (./assets/bar)</label>
+                <ul class="fs-xs font-mono p-2 bg-slate-100 rounded border" style="max-height: 150px; overflow-y: auto;" id="mainbar-assets-list"></ul>
               </div>
               <div>
-                <label class="form-label mb-1">ตัวเลือก Head Bar (จาก ./assets/head)</label>
-                <ul class="fs-xs font-mono p-2 bg-slate-100 rounded border" id="headbar-assets-list"></ul>
+                <label class="form-label mb-1">Head Bar (./assets/head)</label>
+                <ul class="fs-xs font-mono p-2 bg-slate-100 rounded border" style="max-height: 150px; overflow-y: auto;" id="headbar-assets-list"></ul>
+              </div>
+              <div>
+                <label class="form-label mb-1">Logo (./assets/logo)</label>
+                <ul class="fs-xs font-mono p-2 bg-slate-100 rounded border" style="max-height: 150px; overflow-y: auto;" id="logo-assets-list"></ul>
               </div>
             </div>
 
@@ -125,6 +140,10 @@ export class SettingsView {
       this.addItemTypeRow('ชนิดใหม่', 'new_item');
     });
 
+    document.getElementById('btn-add-preset-head').addEventListener('click', () => {
+      this.addPresetHeadRow('ข้อความใหม่');
+    });
+
     document.getElementById('btn-reload-config').addEventListener('click', async () => {
       await this.store.loadConfigFromBackend();
       this.showToast('โหลดข้อมูล config.json เรียบร้อยแล้ว', 'info');
@@ -179,8 +198,10 @@ export class SettingsView {
 
   renderConfigEditor(config) {
     const itemTypesContainer = document.getElementById('itemtypes-container');
+    const presetsContainer = document.getElementById('presets-container');
     const mainbarList = document.getElementById('mainbar-assets-list');
     const headbarList = document.getElementById('headbar-assets-list');
+    const logoList = document.getElementById('logo-assets-list');
 
     if (!itemTypesContainer) return;
 
@@ -189,16 +210,30 @@ export class SettingsView {
     if (config && config.itemTypes && Array.isArray(config.itemTypes)) {
       config.itemTypes.forEach(t => this.addItemTypeRow(t.label, t.value));
     } else {
+      this.addItemTypeRow('Logo บาร์', 'logo');
       this.addItemTypeRow('บาร์ประเด็น', 'mainbar');
-      this.addItemTypeRow('บาร์ชื่อ-ตำแหน่ง', 'bar2line');
+      this.addItemTypeRow('บาร์ 2 บรรทัด', 'bar2line');
+      this.addItemTypeRow('บาร์พิธีกร 2 คน', 'bar2name');
+    }
+
+    // Render Preset Heads rows
+    if (presetsContainer) {
+      presetsContainer.innerHTML = '';
+      const presets = (config && config.presetHeads && Array.isArray(config.presetHeads)) ? config.presetHeads : ["ประเด็นร้อน", "สถานการณ์เด่น", "สัมภาษณ์ทางโทรศัพท์"];
+      presets.forEach(p => this.addPresetHeadRow(p));
     }
 
     // Render Assets Lists
     if (mainbarList && config && config.mainbarOptions) {
-      mainbarList.innerHTML = config.mainbarOptions.map(o => `<li>• ${o.label} (<code>${o.value}</code>)</li>`).join('') || '<li>ไม่มีไฟล์</li>';
+      mainbarList.innerHTML = config.mainbarOptions.map(o => `<li>• ${o.label}</li>`).join('') || '<li class="text-muted">ไม่มีไฟล์</li>';
     }
     if (headbarList && config && config.headbarOptions) {
-      headbarList.innerHTML = config.headbarOptions.map(o => `<li>• ${o.label} (<code>${o.value}</code>)</li>`).join('') || '<li>ไม่มีไฟล์</li>';
+      headbarList.innerHTML = config.headbarOptions.map(o => `<li>• ${o.label}</li>`).join('') || '<li class="text-muted">ไม่มีไฟล์</li>';
+    }
+    if (logoList && config && config.logoOptions) {
+      logoList.innerHTML = config.logoOptions.length > 0
+        ? config.logoOptions.map(o => `<li>• ${o.label}</li>`).join('')
+        : '<li class="text-muted">ไม่มีไฟล์ใน assets/logo</li>';
     }
   }
 
@@ -218,23 +253,52 @@ export class SettingsView {
     container.appendChild(row);
   }
 
-  async saveConfigFile() {
-    const container = document.getElementById('itemtypes-container');
-    const itemTypes = [];
+  addPresetHeadRow(text = '') {
+    const container = document.getElementById('presets-container');
+    if (!container) return;
 
-    const rows = container.querySelectorAll('.datafield-row');
-    rows.forEach(r => {
-      const label = r.querySelector('.it-label').value.trim();
-      const value = r.querySelector('.it-value').value.trim();
-      if (label && value) {
-        itemTypes.push({ label, value });
-      }
-    });
+    const row = document.createElement('div');
+    row.className = 'datafield-row';
+    row.style.gridTemplateColumns = '1fr 32px';
+    row.innerHTML = `
+      <input type="text" class="form-control preset-val" placeholder="ข้อความที่ใช้บ่อย (e.g. ประเด็นร้อน)" value="${text}">
+      <button type="button" class="btn-icon text-danger btn-remove-preset" title="Remove">&times;</button>
+    `;
+
+    row.querySelector('.btn-remove-preset').addEventListener('click', () => row.remove());
+    container.appendChild(row);
+  }
+
+  async saveConfigFile() {
+    const itemContainer = document.getElementById('itemtypes-container');
+    const presetContainer = document.getElementById('presets-container');
+
+    const itemTypes = [];
+    if (itemContainer) {
+      const rows = itemContainer.querySelectorAll('.datafield-row');
+      rows.forEach(r => {
+        const label = r.querySelector('.it-label').value.trim();
+        const value = r.querySelector('.it-value').value.trim();
+        if (label && value) {
+          itemTypes.push({ label, value });
+        }
+      });
+    }
+
+    const presetHeads = [];
+    if (presetContainer) {
+      const rows = presetContainer.querySelectorAll('.datafield-row');
+      rows.forEach(r => {
+        const val = r.querySelector('.preset-val').value.trim();
+        if (val) presetHeads.push(val);
+      });
+    }
 
     const currentConfig = this.store.getState().config || {};
     const newConfig = {
       ...currentConfig,
-      itemTypes
+      itemTypes,
+      presetHeads
     };
 
     try {
