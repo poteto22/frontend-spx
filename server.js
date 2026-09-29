@@ -221,6 +221,21 @@ const server = http.createServer((req, res) => {
       try {
         const payload = JSON.parse(body);
         const itemID = payload.itemID || 'mainbar';
+        let logoVal = payload.logo !== undefined ? payload.logo : (payload.data ? payload.data.logo : '');
+
+        if (!logoVal && itemID === 'logo') {
+          const topicVal = payload.topic || (payload.data ? payload.data.topic : '');
+          if (topicVal && topicVal.includes('Logo: ')) {
+            const fileName = topicVal.split('Logo: ').pop().trim();
+            logoVal = `./assets/logo/${fileName}`;
+          } else {
+            const config = getConfig();
+            if (config.logoOptions && config.logoOptions.length > 0) {
+              logoVal = config.logoOptions[0].value;
+            }
+          }
+        }
+
         activeItemsMap[itemID] = {
           head: payload.head !== undefined ? payload.head : (payload.data ? payload.data.head : ''),
           topic: payload.topic !== undefined ? payload.topic : (payload.data ? payload.data.topic : ''),
@@ -228,12 +243,16 @@ const server = http.createServer((req, res) => {
           line2: payload.line2 !== undefined ? payload.line2 : (payload.data ? payload.data.line2 : ''),
           name1: payload.name1 !== undefined ? payload.name1 : (payload.data ? payload.data.name1 : ''),
           name2: payload.name2 !== undefined ? payload.name2 : (payload.data ? payload.data.name2 : ''),
-          logo: payload.logo !== undefined ? payload.logo : (payload.data ? payload.data.logo : ''),
+          logo: logoVal,
           mainbar: payload.mainbar !== undefined ? payload.mainbar : './assets/bar/MAIN BAR.png',
           headbar: payload.headbar !== undefined ? payload.headbar : '',
           ...(payload.data || {}),
           ...payload
         };
+
+        // Also ensure activeItemsMap[itemID].logo is set
+        activeItemsMap[itemID].logo = logoVal;
+
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ status: 'ok', itemID, activeData: activeItemsMap[itemID] }));
       } catch (err) {
@@ -286,13 +305,101 @@ const server = http.createServer((req, res) => {
                        pathname.endsWith('.jpg') ||
                        pathname.endsWith('.ico');
 
+// Helper to convert relative asset path to full HTTP URL
+function toFullUrl(pathStr, req) {
+  if (!pathStr || typeof pathStr !== 'string') return pathStr || '';
+  if (pathStr.startsWith('http://') || pathStr.startsWith('https://') || pathStr.startsWith('data:')) {
+    return pathStr;
+  }
+  const host = (req && req.headers && req.headers.host) ? req.headers.host : 'localhost:8080';
+  const cleanPath = pathStr.replace(/^\.?\//, '');
+  const encodedPath = cleanPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+  return `http://${host}/${encodedPath}`;
+}
+
+// Helper to format JSON response per item type
+function formatItemResponse(item, cleanId, req) {
+  const itemID = item.itemID || cleanId;
+
+  if (itemID === 'mainbar' || cleanId === 'mainbar') {
+    return {
+      head: item.head !== undefined ? item.head : '',
+      topic: item.topic !== undefined ? item.topic : 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ',
+      mainbar: toFullUrl(item.mainbar !== undefined ? item.mainbar : './assets/bar/MAIN BAR.png', req),
+      headbar: toFullUrl(item.headbar !== undefined ? item.headbar : '', req)
+    };
+  }
+
+  if (itemID === 'logo' || cleanId === 'logo') {
+    let logoVal = item.logo !== undefined ? item.logo : '';
+    if (!logoVal) {
+      if (item.topic && item.topic.includes('Logo: ')) {
+        const fileName = item.topic.split('Logo: ').pop().trim();
+        logoVal = `./assets/logo/${fileName}`;
+      } else {
+        const config = getConfig();
+        if (config.logoOptions && config.logoOptions.length > 0) {
+          logoVal = config.logoOptions[0].value;
+        }
+      }
+    }
+    return {
+      head: item.head !== undefined ? item.head : 'LOGO CG',
+      topic: item.topic !== undefined ? item.topic : 'Logo',
+      logo: toFullUrl(logoVal, req),
+      mainbar: toFullUrl(item.mainbar !== undefined ? item.mainbar : './assets/bar/MAIN BAR.png', req),
+      headbar: toFullUrl(item.headbar !== undefined ? item.headbar : '', req),
+      itemID: 'logo'
+    };
+  }
+
+  if (itemID === 'bar2line' || cleanId === 'bar2line') {
+    return {
+      head: item.head !== undefined ? item.head : '',
+      topic: item.topic !== undefined ? item.topic : '',
+      line1: item.line1 !== undefined ? item.line1 : '',
+      line2: item.line2 !== undefined ? item.line2 : '',
+      mainbar: toFullUrl(item.mainbar !== undefined ? item.mainbar : './assets/bar/MAIN BAR.png', req),
+      headbar: toFullUrl(item.headbar !== undefined ? item.headbar : '', req),
+      itemID: 'bar2line'
+    };
+  }
+
+  if (itemID === 'bar2name' || cleanId === 'bar2name') {
+    return {
+      head: item.head !== undefined ? item.head : '',
+      topic: item.topic !== undefined ? item.topic : '',
+      name1: item.name1 !== undefined ? item.name1 : '',
+      name2: item.name2 !== undefined ? item.name2 : '',
+      line2: item.line2 !== undefined ? item.line2 : '',
+      mainbar: toFullUrl(item.mainbar !== undefined ? item.mainbar : './assets/bar/MAIN BAR.png', req),
+      headbar: toFullUrl(item.headbar !== undefined ? item.headbar : '', req),
+      itemID: 'bar2name'
+    };
+  }
+
+  // Fallback for any other custom item types
+  let resObj = {
+    head: item.head !== undefined ? item.head : '',
+    topic: item.topic !== undefined ? item.topic : '',
+    mainbar: toFullUrl(item.mainbar !== undefined ? item.mainbar : './assets/bar/MAIN BAR.png', req),
+    headbar: toFullUrl(item.headbar !== undefined ? item.headbar : '', req)
+  };
+  if (item.line1) resObj.line1 = item.line1;
+  if (item.line2) resObj.line2 = item.line2;
+  if (item.name1) resObj.name1 = item.name1;
+  if (item.name2) resObj.name2 = item.name2;
+  if (item.logo) resObj.logo = toFullUrl(item.logo, req);
+  return resObj;
+}
+
   if (!isStaticFile && pathname !== '/') {
     const cleanId = pathname.replace(/^\/+/, '').replace(/\.json$/i, '');
     if (cleanId) {
       // 1. Check if an item with this itemID was specifically played/triggered
       if (activeItemsMap[cleanId]) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify(activeItemsMap[cleanId], null, 2));
+        res.end(JSON.stringify(formatItemResponse(activeItemsMap[cleanId], cleanId, req), null, 2));
         return;
       }
 
@@ -300,22 +407,12 @@ const server = http.createServer((req, res) => {
       const matchedItem = itemsStore.find(i => i.itemID === cleanId || i.id === cleanId);
       if (matchedItem) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({
-          head: matchedItem.head !== undefined ? matchedItem.head : '',
-          topic: matchedItem.topic !== undefined ? matchedItem.topic : '',
-          mainbar: matchedItem.mainbar !== undefined ? matchedItem.mainbar : './assets/bar/MAIN BAR.png',
-          headbar: matchedItem.headbar !== undefined ? matchedItem.headbar : ''
-        }, null, 2));
+        res.end(JSON.stringify(formatItemResponse(matchedItem, cleanId, req), null, 2));
         return;
       } else {
         // Fallback JSON payload
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({
-          head: '',
-          topic: 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ',
-          mainbar: './assets/bar/MAIN BAR.png',
-          headbar: ''
-        }, null, 2));
+        res.end(JSON.stringify(formatItemResponse({}, cleanId, req), null, 2));
         return;
       }
     }

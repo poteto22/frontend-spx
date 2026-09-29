@@ -216,7 +216,7 @@ export class ControllerView {
       head: 'LOGO CG',
       topic: `Logo: ${selectedLogo.split('/').pop()}`,
       relpath: 'Example/New-bar4.html',
-      webplayout: '1',
+      webplayout: '2',
       out: 'manual'
     };
 
@@ -226,7 +226,7 @@ export class ControllerView {
       await this.api.directPlayout({
         command: 'play',
         relativeTemplatePath: logoItem.relpath,
-        webplayoutLayer: '1',
+        webplayoutLayer: '2',
         out: 'manual',
         DataFields: [{ field: 'logo', value: selectedLogo }]
       }).catch(() => null);
@@ -244,7 +244,7 @@ export class ControllerView {
       await this.api.stopItem('logo');
       await this.api.directPlayout({
         command: 'stop',
-        webplayoutLayer: '1'
+        webplayoutLayer: '2'
       }).catch(() => null);
 
       this.isLogoOnAir = false;

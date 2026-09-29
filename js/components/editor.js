@@ -189,6 +189,9 @@ export class EditorComponent {
       this.fieldsLogo.classList.remove('hidden');
       this.sectionHead.classList.add('hidden');
       this.sectionBarAssets.classList.add('hidden');
+      if (this.inputLayer && this.inputIndex.value === '-1') {
+        this.inputLayer.value = '2';
+      }
     } else if (selectedType === 'mainbar') {
       this.fieldsMainbar.classList.remove('hidden');
       this.sectionHead.classList.remove('hidden');
