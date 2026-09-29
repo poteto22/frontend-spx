@@ -50,7 +50,6 @@ export class Store {
         {
           itemID: 'mainbar',
           relpath: 'Example/New-bar4.html',
-          webplayout: '1',
           out: 'manual',
           head: 'หัวเรื่อง',
           topic: 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ',
@@ -66,7 +65,6 @@ export class Store {
         {
           itemID: 'bar2line',
           relpath: 'Example/New-bar4.html',
-          webplayout: '1',
           out: 'manual',
           head: '',
           topic: 'รายงานสดสถานการณ์น้ำท่วมและมาตรการช่วยเหลือประชาชน',
@@ -248,7 +246,6 @@ export class Store {
     const newItem = {
       itemID: itemData.itemID || 'mainbar',
       relpath: itemData.relpath || 'Example/New-bar4.html',
-      webplayout: itemData.webplayout || '1',
       out: itemData.out || 'manual',
       head: itemData.head !== undefined ? itemData.head : '',
       topic: itemData.topic !== undefined ? itemData.topic : '',

@@ -53,7 +53,6 @@ export class DirectPlayoutComponent {
 
   async sendDirectPlayout(command) {
     const path = this.inputPath.value.trim();
-    const layer = this.inputLayer.value.trim() || '1';
     const out = this.inputOut.value.trim() || 'manual';
 
     if (!path) {
@@ -72,19 +71,18 @@ export class DirectPlayoutComponent {
     const payload = {
       command: command,
       relativeTemplatePath: path,
-      webplayoutLayer: layer,
       out: out,
       DataFields: DataFields
     };
 
     try {
       await this.api.directPlay(payload);
-      this.showToast(`Direct ${command.toUpperCase()} sent on Layer ${layer}`, 'success');
+      this.showToast(`Direct ${command.toUpperCase()} sent`, 'success');
     } catch (err) {
       // Fallback method call
       try {
         await this.api.directPlayout(payload);
-        this.showToast(`Direct ${command.toUpperCase()} sent on Layer ${layer}`, 'success');
+        this.showToast(`Direct ${command.toUpperCase()} sent`, 'success');
       } catch (err2) {
         this.showToast(`Direct Playout error: ${err2.message}`, 'danger');
       }

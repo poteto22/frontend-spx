@@ -221,7 +221,6 @@ export class MainRundownView {
             await this.api.directPlayout({
               command: 'play',
               relativeTemplatePath: item.relpath,
-              webplayoutLayer: item.webplayout || '1',
               out: item.out || 'manual',
               DataFields: [
                 { field: 'f0', value: item.head },

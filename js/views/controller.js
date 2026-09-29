@@ -163,7 +163,6 @@ export class ControllerView {
       await this.api.directPlayout({
         command: 'play',
         relativeTemplatePath: item.relpath,
-        webplayoutLayer: item.webplayout || '1',
         out: item.out || 'manual',
         DataFields: item.DataFields || [
           { field: 'f0', value: item.head },
@@ -216,7 +215,6 @@ export class ControllerView {
       head: 'LOGO CG',
       topic: `Logo: ${selectedLogo.split('/').pop()}`,
       relpath: 'Example/New-bar4.html',
-      webplayout: '2',
       out: 'manual'
     };
 
@@ -226,7 +224,6 @@ export class ControllerView {
       await this.api.directPlayout({
         command: 'play',
         relativeTemplatePath: logoItem.relpath,
-        webplayoutLayer: '2',
         out: 'manual',
         DataFields: [{ field: 'logo', value: selectedLogo }]
       }).catch(() => null);
@@ -243,8 +240,7 @@ export class ControllerView {
     try {
       await this.api.stopItem('logo');
       await this.api.directPlayout({
-        command: 'stop',
-        webplayoutLayer: '2'
+        command: 'stop'
       }).catch(() => null);
 
       this.isLogoOnAir = false;
