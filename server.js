@@ -344,11 +344,7 @@ function formatItemResponse(item, cleanId, req) {
       }
     }
     return {
-      head: item.head !== undefined ? item.head : 'LOGO CG',
-      topic: item.topic !== undefined ? item.topic : 'Logo',
       logo: toFullUrl(logoVal, req),
-      mainbar: toFullUrl(item.mainbar !== undefined ? item.mainbar : './assets/bar/MAIN BAR.png', req),
-      headbar: toFullUrl(item.headbar !== undefined ? item.headbar : '', req),
       itemID: 'logo'
     };
   }

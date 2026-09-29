@@ -33,9 +33,9 @@
     <style>
       @font-face {
         font-family: 'Noto Sans Thai';
-        src: url('/fonts/NotoSansThai-Black.ttf') format('truetype'),
-             url('../../fonts/NotoSansThai-Black.ttf') format('truetype'),
-             url('./fonts/NotoSansThai-Black.ttf') format('truetype');
+        src: url('/fonts/NotoSansThai-Bold.ttf') format('truetype'),
+             url('../../fonts/NotoSansThai-Bold.ttf') format('truetype'),
+             url('./fonts/NotoSansThai-Bold.ttf') format('truetype');
         font-weight: normal;
         font-style: normal;
       }
@@ -809,8 +809,7 @@
 
         if (value.startsWith("./assets/") || value.startsWith("assets/") || value.startsWith("/assets/")) {
           const cleanPath = value.replace(/^\.?\//, "");
-          const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "http://localhost:8080";
-          return origin.replace(/\/+$/, "") + "/" + cleanPath;
+          return "http://localhost:8080/" + cleanPath;
         }
 
         if (!value.includes("/") && folder) {
@@ -827,12 +826,6 @@
         try {
           let fetchUrl = url;
           if (url.startsWith("http://") || url.startsWith("https://")) {
-            if (typeof window !== "undefined" && window.location && window.location.hostname) {
-              const curHost = window.location.hostname;
-              if (curHost !== "localhost" && curHost !== "127.0.0.1") {
-                fetchUrl = fetchUrl.replace(/:\/\/(localhost|127\.0\.0\.1)/i, `://${curHost}`);
-              }
-            }
             try {
               let proxyUrl = `/api/v1/feedproxy?url=${encodeURIComponent(url)}`;
               const proxyRes = await fetch(proxyUrl);
@@ -11827,7 +11820,7 @@
                 }),
                 y: new Property({
                   unit: "px",
-                  value: 922.5,
+                  value: 926.5,
                   disableKeyframing: false,
                   keyframes: []
                 }),
@@ -11889,7 +11882,7 @@
                 }),
                 y: new Property({
                   unit: "px",
-                  value: 922.5,
+                  value: 926.5,
                   disableKeyframing: false,
                   keyframes: [{
                       id: "Y7H-FvvcY1QUNyZTuuSyJ",
@@ -11913,7 +11906,7 @@
                     },
                     {
                       id: "zO5E9WsdqqIgE3SjQYMyH",
-                      _value: 922.5,
+                      _value: 926.5,
                       get value() {
                         return this._value;
                       },
@@ -11933,7 +11926,7 @@
                     },
                     {
                       id: "rGo_gbdIal7oQp4PcfNwp",
-                      _value: 922.5,
+                      _value: 926.5,
                       get value() {
                         return this._value;
                       },
