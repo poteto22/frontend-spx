@@ -84,13 +84,7 @@ export class SPXClient {
     return fetch('/api/active-item', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        itemID: item.itemID,
-        head: item.head,
-        topic: item.topic,
-        mainbar: item.mainbar,
-        headbar: item.headbar
-      })
+      body: JSON.stringify(item)
     }).then(res => res.json()).catch(() => null);
   }
 

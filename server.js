@@ -18,8 +18,9 @@ let itemsStore = [
   },
   {
     itemID: 'bar2line',
-    head: '',
-    topic: 'รายงานสดสถานการณ์น้ำท่วมและมาตรการช่วยเหลือประชาชน',
+    head: 'รายงานสด',
+    line1: 'สถานการณ์น้ำท่วม',
+    line2: 'และมาตรการช่วยเหลือประชาชน',
     mainbar: './assets/bar/MAIN BAR.png',
     headbar: ''
   }
@@ -352,7 +353,6 @@ function formatItemResponse(item, cleanId, req) {
   if (itemID === 'bar2line' || cleanId === 'bar2line') {
     return {
       head: item.head !== undefined ? item.head : '',
-      topic: item.topic !== undefined ? item.topic : '',
       line1: item.line1 !== undefined ? item.line1 : '',
       line2: item.line2 !== undefined ? item.line2 : '',
       mainbar: toFullUrl(item.mainbar !== undefined ? item.mainbar : './assets/bar/MAIN BAR.png', req),
@@ -364,7 +364,6 @@ function formatItemResponse(item, cleanId, req) {
   if (itemID === 'bar2name' || cleanId === 'bar2name') {
     return {
       head: item.head !== undefined ? item.head : '',
-      topic: item.topic !== undefined ? item.topic : '',
       name1: item.name1 !== undefined ? item.name1 : '',
       name2: item.name2 !== undefined ? item.name2 : '',
       line2: item.line2 !== undefined ? item.line2 : '',
