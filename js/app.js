@@ -67,6 +67,15 @@ class App {
         const targetView = document.getElementById(targetViewId);
         if (targetView) targetView.classList.add('active');
 
+        const mainBody = document.querySelector('.main-body');
+        if (mainBody) {
+          if (targetViewId === 'view-controller') {
+            mainBody.classList.add('no-scroll');
+          } else {
+            mainBody.classList.remove('no-scroll');
+          }
+        }
+
         this.store.setState({ activeView: targetViewId });
       });
     });

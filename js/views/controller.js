@@ -34,7 +34,7 @@ export class ControllerView {
       <div class="controller-desk">
         <!-- Main Desk Controls -->
         <div class="main-controller-panel">
-          <div class="card p-3">
+          <div class="card p-3 ctrl-desk-card">
             <div class="flex-between mb-2">
               <span class="fs-xs fw-700 text-muted uppercase">แผงควบคุมการออกอากาศหลัก (Main Broadcast Control Desk)</span>
               <span class="badge badge-info" id="ctrl-selected-id">Selected: Item #1</span>
@@ -77,7 +77,7 @@ export class ControllerView {
 
           <!-- Focus Navigation & Playlist -->
           <div class="playlist-container">
-            <div class="flex-between mb-2 pb-2 border-b">
+            <div class="flex-between mb-2 pb-2 border-b playlist-header">
               <span class="fw-700 fs-sm">คิวรายการ Rundown (Playlist Queue)</span>
               <div class="flex-center gap-1">
                 <button class="btn btn-xs btn-outline" id="btn-focus-first">⏮ First</button>
@@ -95,7 +95,7 @@ export class ControllerView {
 
         <!-- Side Monitor Panel -->
         <aside class="side-monitor-panel">
-          <div class="card p-3">
+          <div class="card p-3 ctrl-side-card">
             <h4 class="fs-sm mb-2 text-secondary">ข้อมูลรายการที่เลือกอยู่ (Selected Data)</h4>
             <div id="ctrl-item-details" class="fs-xs flex flex-col gap-2">
               <!-- Details -->
@@ -103,7 +103,7 @@ export class ControllerView {
           </div>
 
           <!-- Dedicated CG Logo Control Section -->
-          <div class="card p-3">
+          <div class="card p-3 ctrl-side-card ctrl-logo-card">
             <div class="flex-between mb-2">
               <h4 class="fs-sm text-secondary mb-0 fw-700">ส่วนควบคุม CG Logo</h4>
               <span class="badge badge-neutral" id="ctrl-logo-status-pill">OFF-AIR</span>
@@ -155,11 +155,17 @@ export class ControllerView {
     this.renderPlaylist(items);
   }
 
-  selectIndex(index) {
+  selectIndex(index, scrollIntoView = true) {
     const items = this.store.getState().items;
     if (index >= 0 && index < items.length) {
       this.selectedItemIndex = index;
       this.renderPlaylist(items);
+      if (scrollIntoView) {
+        requestAnimationFrame(() => {
+          const el = document.querySelector(`.playlist-item[data-index="${index}"]`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+      }
     }
   }
 

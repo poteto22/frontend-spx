@@ -346,7 +346,13 @@ function toFullUrl(pathStr, req) {
   }
   const host = (req && req.headers && req.headers.host) ? req.headers.host : 'localhost:8080';
   const cleanPath = pathStr.replace(/^\.?\//, '');
-  const encodedPath = cleanPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+  const encodedPath = cleanPath.split('/').map(segment => {
+    try {
+      return encodeURIComponent(decodeURIComponent(segment));
+    } catch (e) {
+      return encodeURIComponent(segment);
+    }
+  }).join('/');
   return `http://${host}/${encodedPath}`;
 }
 
@@ -447,7 +453,14 @@ function formatItemResponse(item, cleanId, req) {
 
   // Serve static files
   if (pathname === '/') pathname = '/index.html';
-  const filePath = path.join(PUBLIC_DIR, pathname);
+  let decodedPath = pathname;
+  try {
+    decodedPath = decodeURIComponent(pathname);
+  } catch (e) {
+    decodedPath = pathname;
+  }
+  const safePath = path.normalize(decodedPath).replace(/^(\.\.[\/\\])+/, '');
+  const filePath = path.join(PUBLIC_DIR, safePath);
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {

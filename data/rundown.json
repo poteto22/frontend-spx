@@ -3,12 +3,12 @@
     {
       "id": "block-1",
       "title": "ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ",
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "block_1791187966211_webz",
       "title": "ข่าวที่ 2: น้ำท่วมอยุทธยา",
-      "collapsed": false
+      "collapsed": true
     }
   ],
   "items": [
@@ -114,11 +114,48 @@
       "blockId": "block-1"
     },
     {
+      "itemID": "bar2line",
+      "blockId": "block-1",
+      "relpath": "Example/New-bar4.html",
+      "out": "manual",
+      "head": "สัมภาษณ์ทางโทรศัพท์",
+      "topic": "อนุทิน ชาญวีรกุล / นายกรัฐมนตรี",
+      "line1": "อนุทิน ชาญวีรกุล",
+      "line2": "นายกรัฐมนตรี",
+      "name1": "",
+      "name2": "",
+      "logo": "",
+      "mainbar": "./assets/bar/BAR.png",
+      "headbar": "./assets/head/top-bar-gray.png",
+      "DataFields": [
+        {
+          "field": "f0",
+          "value": "สัมภาษณ์ทางโทรศัพท์"
+        },
+        {
+          "field": "line1",
+          "value": "อนุทิน ชาญวีรกุล"
+        },
+        {
+          "field": "line2",
+          "value": "นายกรัฐมนตรี"
+        },
+        {
+          "field": "mainbar",
+          "value": "./assets/bar/BAR.png"
+        },
+        {
+          "field": "headbar",
+          "value": "./assets/head/top-bar-gray.png"
+        }
+      ]
+    },
+    {
       "itemID": "mainbar",
       "relpath": "Example/New-bar4.html",
       "out": "manual",
       "head": "สถานการณ์เด่น",
-      "topic": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต",
+      "topic": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 4 ชีวิต",
       "line1": "",
       "line2": "",
       "name1": "",
@@ -133,7 +170,7 @@
         },
         {
           "field": "f1",
-          "value": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต"
+          "value": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 4 ชีวิต"
         },
         {
           "field": "mainbar",
