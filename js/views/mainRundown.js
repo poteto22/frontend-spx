@@ -195,7 +195,7 @@ export class MainRundownView {
             <div class="fs-xs font-mono text-muted mt-1">ID: ${item.itemID}</div>
           </div>
           <div class="item-row-main">
-            <div class="item-row-head">${headDisplay}</div>
+            ${headDisplay ? `<div class="item-row-head">${headDisplay}</div>` : ''}
             <div class="item-row-topic">${topicDisplay}</div>
             <div class="item-row-assets">
               <span>Mainbar: <code>${item.mainbar || '-'}</code></span> | 

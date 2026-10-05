@@ -4,7 +4,7 @@
     "relpath": "Example/New-bar4.html",
     "out": "manual",
     "head": "สถานการณ์เด่น",
-    "topic": "ระทึก น้ำท่วมห้องเช่าทรุดตัว ผู้อาศัยอพยพวุ่น",
+    "topic": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต",
     "line1": "",
     "line2": "",
     "name1": "",
@@ -19,7 +19,75 @@
       },
       {
         "field": "f1",
+        "value": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": "./assets/head/top-bar-red.png"
+      }
+    ],
+    "webplayout": "1",
+    "customFields": []
+  },
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "out": "manual",
+    "head": "ประเด็นร้อน",
+    "topic": "ระทึก น้ำท่วมห้องเช่าทรุดตัว ผู้อาศัยอพยพวุ่น",
+    "line1": "",
+    "line2": "",
+    "name1": "",
+    "name2": "",
+    "logo": "",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "./assets/head/top-bar-red.png",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "ประเด็นร้อน"
+      },
+      {
+        "field": "f1",
         "value": "ระทึก น้ำท่วมห้องเช่าทรุดตัว ผู้อาศัยอพยพวุ่น"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": "./assets/head/top-bar-red.png"
+      }
+    ],
+    "webplayout": "1",
+    "customFields": []
+  },
+  {
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "out": "manual",
+    "head": "ประเด็นร้อน",
+    "topic": "น้ำท่วมฉับพลัน \"พ่อเฒ่า\" ตกบ้านจมสิ้นใจอนาถ",
+    "line1": "",
+    "line2": "",
+    "name1": "",
+    "name2": "",
+    "logo": "",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "./assets/head/top-bar-red.png",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "ประเด็นร้อน"
+      },
+      {
+        "field": "f1",
+        "value": "น้ำท่วมฉับพลัน \"พ่อเฒ่า\" ตกบ้านจมสิ้นใจอนาถ"
       },
       {
         "field": "mainbar",
@@ -32,13 +100,45 @@
     ]
   },
   {
-    "itemID": "bar2line",
+    "itemID": "mainbar",
+    "relpath": "Example/New-bar4.html",
+    "out": "manual",
+    "head": "ประเด็นร้อน",
+    "topic": "ทุกข์ซ้ำชาวนา โจรลักเครื่องสูบน้ำ หวั่นข้าวเน่าตาย",
+    "line1": "",
+    "line2": "",
+    "name1": "",
+    "name2": "",
+    "logo": "",
+    "mainbar": "./assets/bar/BAR.png",
+    "headbar": "./assets/head/top-bar-red.png",
+    "DataFields": [
+      {
+        "field": "f0",
+        "value": "ประเด็นร้อน"
+      },
+      {
+        "field": "f1",
+        "value": "ทุกข์ซ้ำชาวนา โจรลักเครื่องสูบน้ำ หวั่นข้าวเน่าตาย"
+      },
+      {
+        "field": "mainbar",
+        "value": "./assets/bar/BAR.png"
+      },
+      {
+        "field": "headbar",
+        "value": "./assets/head/top-bar-red.png"
+      }
+    ]
+  },
+  {
+    "itemID": "mainbar",
     "relpath": "Example/New-bar4.html",
     "out": "manual",
     "head": "",
-    "topic": "ณัฐวุฒิ บัวมาตร์ / ผู้ดำเนินรายการ",
-    "line1": "ณัฐวุฒิ บัวมาตร์",
-    "line2": "ผู้ดำเนินรายการ",
+    "topic": "นาทีชีวิต \"กู้ภัย\" ช่วยชาวจีนถูกน้ำซัดติดบนต้นไม้",
+    "line1": "",
+    "line2": "",
     "name1": "",
     "name2": "",
     "logo": "",
@@ -50,12 +150,8 @@
         "value": ""
       },
       {
-        "field": "line1",
-        "value": "ณัฐวุฒิ บัวมาตร์"
-      },
-      {
-        "field": "line2",
-        "value": "ผู้ดำเนินรายการ"
+        "field": "f1",
+        "value": "นาทีชีวิต \"กู้ภัย\" ช่วยชาวจีนถูกน้ำซัดติดบนต้นไม้"
       },
       {
         "field": "mainbar",
@@ -64,91 +160,7 @@
       {
         "field": "headbar",
         "value": ""
-      }
-    ],
-    "webplayout": "1",
-    "customFields": []
-  },
-  {
-    "itemID": "bar2name",
-    "relpath": "Example/New-bar4.html",
-    "out": "manual",
-    "head": "สถานการณ์เด่น",
-    "topic": "ณัฐวุฒิ บัวมาตร์ & ลิขิต เคลากลาง (ผู้ดำเนินรายการ)",
-    "line1": "",
-    "line2": "ผู้ดำเนินรายการ",
-    "name1": "ณัฐวุฒิ บัวมาตร์",
-    "name2": "ลิขิต เคลากลาง",
-    "logo": "",
-    "mainbar": "./assets/bar/BAR.png",
-    "headbar": "./assets/head/top-bar-blue.png",
-    "DataFields": [
-      {
-        "field": "f0",
-        "value": "สถานการณ์เด่น"
-      },
-      {
-        "field": "name1",
-        "value": "ณัฐวุฒิ บัวมาตร์"
-      },
-      {
-        "field": "name2",
-        "value": "ลิขิต เคลากลาง"
-      },
-      {
-        "field": "line2",
-        "value": "ผู้ดำเนินรายการ"
-      },
-      {
-        "field": "mainbar",
-        "value": "./assets/bar/BAR.png"
-      },
-      {
-        "field": "headbar",
-        "value": "./assets/head/top-bar-blue.png"
       }
     ]
-  },
-  {
-    "itemID": "bar2name",
-    "relpath": "Example/New-bar4.html",
-    "out": "manual",
-    "head": "",
-    "topic": "ณัฐวุฒิ บัวมาตร์ & ลิขิต เคลากลาง (ผู้ดำเนินรายการ)",
-    "line1": "",
-    "line2": "ผู้ดำเนินรายการ",
-    "name1": "ณัฐวุฒิ บัวมาตร์",
-    "name2": "ลิขิต เคลากลาง",
-    "logo": "",
-    "mainbar": "./assets/bar/BAR.png",
-    "headbar": "",
-    "DataFields": [
-      {
-        "field": "f0",
-        "value": ""
-      },
-      {
-        "field": "name1",
-        "value": "ณัฐวุฒิ บัวมาตร์"
-      },
-      {
-        "field": "name2",
-        "value": "ลิขิต เคลากลาง"
-      },
-      {
-        "field": "line2",
-        "value": "ผู้ดำเนินรายการ"
-      },
-      {
-        "field": "mainbar",
-        "value": "./assets/bar/BAR.png"
-      },
-      {
-        "field": "headbar",
-        "value": ""
-      }
-    ],
-    "webplayout": "1",
-    "customFields": []
   }
 ]

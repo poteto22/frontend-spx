@@ -33,6 +33,15 @@ export class ControllerView {
               <span class="badge badge-info" id="ctrl-selected-id">Selected: Item #1</span>
             </div>
 
+            <!-- Active / Selected Topic Preview Banner -->
+            <div class="ctrl-active-topic-banner" id="ctrl-active-topic-banner">
+              <div class="ctrl-banner-header">
+                <span class="ctrl-banner-label" id="ctrl-banner-status-label">รายการที่เลือก (SELECTED):</span>
+                <span class="ctrl-banner-head" id="ctrl-banner-head-text"></span>
+              </div>
+              <div class="ctrl-banner-topic" id="ctrl-banner-topic-text">-</div>
+            </div>
+
             <!-- Big Playout Action Buttons -->
             <div class="big-control-buttons">
               <button class="btn-control-big btn-control-play" id="btn-big-play">
@@ -310,33 +319,86 @@ export class ControllerView {
       selectedBadge.textContent = selectedItem ? `Selected: #${this.selectedItemIndex + 1} (${selectedItem.itemID})` : 'None';
     }
 
+    // Update Top Banner with Selected / On-Air Topic
+    const bannerBox = document.getElementById('ctrl-active-topic-banner');
+    const bannerStatusLabel = document.getElementById('ctrl-banner-status-label');
+    const bannerHeadText = document.getElementById('ctrl-banner-head-text');
+    const bannerTopicText = document.getElementById('ctrl-banner-topic-text');
+
+    if (selectedItem && bannerTopicText) {
+      const itemID = selectedItem.itemID || 'mainbar';
+      let bannerHead = selectedItem.head || '';
+      let bannerTopic = selectedItem.topic || '';
+      if (itemID === 'logo') {
+        bannerHead = selectedItem.head || 'LOGO CG';
+        bannerTopic = selectedItem.logo ? `Logo: ${selectedItem.logo.split('/').pop()}` : '-';
+      } else if (itemID === 'bar2line') {
+        bannerTopic = `${selectedItem.line1 || ''} / ${selectedItem.line2 || ''}`;
+      } else if (itemID === 'bar2name') {
+        bannerTopic = `${selectedItem.name1 || ''} & ${selectedItem.name2 || ''} (${selectedItem.line2 || ''})`;
+      }
+
+      bannerTopicText.textContent = bannerTopic || '(ไม่มีข้อความประเด็น)';
+      if (bannerHeadText) {
+        bannerHeadText.textContent = bannerHead ? `[${bannerHead}]` : '';
+      }
+
+      const isCurrentOnAir = activeOnAirItem && (activeOnAirItem.itemID === selectedItem.itemID && activeOnAirItem.topic === selectedItem.topic && activeOnAirItem.head === selectedItem.head);
+      if (bannerBox) {
+        if (isCurrentOnAir) {
+          bannerBox.classList.add('is-onair');
+          if (bannerStatusLabel) bannerStatusLabel.textContent = '● กำลัง ON-AIR:';
+        } else {
+          bannerBox.classList.remove('is-onair');
+          if (bannerStatusLabel) bannerStatusLabel.textContent = 'รายการที่เลือก (SELECTED):';
+        }
+      }
+    }
+
     if (selectedItem && detailsContainer) {
       const itemID = selectedItem.itemID || 'mainbar';
       let detailsHtml = `<div><strong>itemID:</strong> <code>${selectedItem.itemID}</code></div>`;
 
       if (itemID === 'logo') {
-        detailsHtml += `<div><strong>Logo:</strong> <code>${selectedItem.logo || '-'}</code></div>`;
+        detailsHtml += `
+          <div><strong>Head:</strong> ${selectedItem.head || '-'}</div>
+          <div class="ctrl-detail-topic-box">
+            <span class="ctrl-detail-topic-label">Logo Asset:</span>
+            <div class="ctrl-detail-topic-text">${selectedItem.logo || '-'}</div>
+          </div>
+        `;
       } else if (itemID === 'bar2line') {
         detailsHtml += `
           <div><strong>Head:</strong> ${selectedItem.head || '-'}</div>
-          <div><strong>Line 1:</strong> ${selectedItem.line1 || '-'}</div>
-          <div><strong>Line 2:</strong> ${selectedItem.line2 || '-'}</div>
+          <div class="ctrl-detail-topic-box">
+            <span class="ctrl-detail-topic-label">บรรทัดที่ 1 (Line 1):</span>
+            <div class="ctrl-detail-topic-text">${selectedItem.line1 || '-'}</div>
+          </div>
+          <div class="ctrl-detail-topic-box">
+            <span class="ctrl-detail-topic-label">บรรทัดที่ 2 (Line 2):</span>
+            <div class="ctrl-detail-topic-text">${selectedItem.line2 || '-'}</div>
+          </div>
           <div><strong>Mainbar:</strong> <code>${selectedItem.mainbar || '-'}</code></div>
           <div><strong>Headbar:</strong> <code>${selectedItem.headbar || 'none'}</code></div>
         `;
       } else if (itemID === 'bar2name') {
         detailsHtml += `
           <div><strong>Head:</strong> ${selectedItem.head || '-'}</div>
-          <div><strong>Name Left:</strong> ${selectedItem.name1 || '-'}</div>
-          <div><strong>Name Right:</strong> ${selectedItem.name2 || '-'}</div>
-          <div><strong>Position:</strong> ${selectedItem.line2 || '-'}</div>
+          <div class="ctrl-detail-topic-box">
+            <span class="ctrl-detail-topic-label">ชื่อพิธีกร:</span>
+            <div class="ctrl-detail-topic-text">${selectedItem.name1 || '-'} & ${selectedItem.name2 || '-'}</div>
+            <div class="fs-xs text-muted mt-1">ตำแหน่ง: ${selectedItem.line2 || '-'}</div>
+          </div>
           <div><strong>Mainbar:</strong> <code>${selectedItem.mainbar || '-'}</code></div>
           <div><strong>Headbar:</strong> <code>${selectedItem.headbar || 'none'}</code></div>
         `;
       } else {
         detailsHtml += `
           <div><strong>Head:</strong> ${selectedItem.head || '-'}</div>
-          <div><strong>Topic:</strong> ${selectedItem.topic || '-'}</div>
+          <div class="ctrl-detail-topic-box">
+            <span class="ctrl-detail-topic-label">ประเด็น (Topic):</span>
+            <div class="ctrl-detail-topic-text">${selectedItem.topic || '-'}</div>
+          </div>
           <div><strong>Mainbar:</strong> <code>${selectedItem.mainbar || '-'}</code></div>
           <div><strong>Headbar:</strong> <code>${selectedItem.headbar || 'none'}</code></div>
         `;
@@ -371,7 +433,7 @@ export class ControllerView {
       }
 
       el.innerHTML = `
-        <div class="flex-center gap-2">
+        <div class="ctrl-playlist-item-left">
           <div class="drag-handle" title="ลากเพื่อเปลี่ยนลำดับ">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="9" cy="5" r="1.5"></circle><circle cx="15" cy="5" r="1.5"></circle>
@@ -379,15 +441,15 @@ export class ControllerView {
               <circle cx="9" cy="19" r="1.5"></circle><circle cx="15" cy="19" r="1.5"></circle>
             </svg>
           </div>
-          <span class="fw-700 text-muted font-mono">#${idx + 1}</span>
-          <div>
-            <div class="fw-700 text-primary">${headDisplay}</div>
-            <div class="fs-xs text-secondary">${topicDisplay}</div>
+          <span class="ctrl-item-index font-mono">#${idx + 1}</span>
+          <div class="ctrl-item-content">
+            ${headDisplay ? `<div class="ctrl-item-head">${headDisplay}</div>` : ''}
+            <div class="ctrl-item-topic">${topicDisplay}</div>
           </div>
         </div>
         <div class="flex-center gap-2">
           <span class="badge ${isOnAir ? 'badge-success' : (isSelected ? 'badge-info' : 'badge-neutral')}">
-            ${isOnAir ? 'ON-AIR' : (isSelected ? 'SELECTED' : 'IDLE')}
+            ${isOnAir ? '● ON-AIR' : (isSelected ? 'SELECTED' : 'IDLE')}
           </span>
         </div>
       `;

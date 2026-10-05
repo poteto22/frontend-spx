@@ -153,7 +153,7 @@ export class CreateRundownView {
         assetsDisplay = `<span><strong>Main Bar:</strong> <code>${item.mainbar || '-'}</code></span>
                          <span><strong>Head Bar:</strong> <code>${item.headbar || 'none'}</code></span>`;
       } else {
-        headDisplay = item.head || '(ไม่มีหัวเรื่อง Top Bar)';
+        headDisplay = item.head || '';
         topicDisplay = item.topic || '(ไม่มีข้อความประเด็น)';
         assetsDisplay = `<span><strong>Main Bar:</strong> <code>${item.mainbar || '-'}</code></span>
                          <span><strong>Head Bar:</strong> <code>${item.headbar || 'none'}</code></span>`;
@@ -172,7 +172,7 @@ export class CreateRundownView {
           <span class="badge badge-info">ID: ${item.itemID}</span>
         </div>
         <div class="item-row-main">
-          <div class="item-row-head">${headDisplay}</div>
+          ${headDisplay ? `<div class="item-row-head">${headDisplay}</div>` : ''}
           <div class="item-row-topic">${topicDisplay}</div>
           <div class="item-row-assets">
             ${assetsDisplay}
