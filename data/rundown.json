@@ -1,166 +1,180 @@
-[
-  {
-    "itemID": "mainbar",
-    "relpath": "Example/New-bar4.html",
-    "out": "manual",
-    "head": "สถานการณ์เด่น",
-    "topic": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต",
-    "line1": "",
-    "line2": "",
-    "name1": "",
-    "name2": "",
-    "logo": "",
-    "mainbar": "./assets/bar/BAR.png",
-    "headbar": "./assets/head/top-bar-red.png",
-    "DataFields": [
-      {
-        "field": "f0",
-        "value": "สถานการณ์เด่น"
-      },
-      {
-        "field": "f1",
-        "value": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต"
-      },
-      {
-        "field": "mainbar",
-        "value": "./assets/bar/BAR.png"
-      },
-      {
-        "field": "headbar",
-        "value": "./assets/head/top-bar-red.png"
-      }
-    ],
-    "webplayout": "1",
-    "customFields": []
-  },
-  {
-    "itemID": "mainbar",
-    "relpath": "Example/New-bar4.html",
-    "out": "manual",
-    "head": "ประเด็นร้อน",
-    "topic": "ระทึก น้ำท่วมห้องเช่าทรุดตัว ผู้อาศัยอพยพวุ่น",
-    "line1": "",
-    "line2": "",
-    "name1": "",
-    "name2": "",
-    "logo": "",
-    "mainbar": "./assets/bar/BAR.png",
-    "headbar": "./assets/head/top-bar-red.png",
-    "DataFields": [
-      {
-        "field": "f0",
-        "value": "ประเด็นร้อน"
-      },
-      {
-        "field": "f1",
-        "value": "ระทึก น้ำท่วมห้องเช่าทรุดตัว ผู้อาศัยอพยพวุ่น"
-      },
-      {
-        "field": "mainbar",
-        "value": "./assets/bar/BAR.png"
-      },
-      {
-        "field": "headbar",
-        "value": "./assets/head/top-bar-red.png"
-      }
-    ],
-    "webplayout": "1",
-    "customFields": []
-  },
-  {
-    "itemID": "mainbar",
-    "relpath": "Example/New-bar4.html",
-    "out": "manual",
-    "head": "ประเด็นร้อน",
-    "topic": "น้ำท่วมฉับพลัน \"พ่อเฒ่า\" ตกบ้านจมสิ้นใจอนาถ",
-    "line1": "",
-    "line2": "",
-    "name1": "",
-    "name2": "",
-    "logo": "",
-    "mainbar": "./assets/bar/BAR.png",
-    "headbar": "./assets/head/top-bar-red.png",
-    "DataFields": [
-      {
-        "field": "f0",
-        "value": "ประเด็นร้อน"
-      },
-      {
-        "field": "f1",
-        "value": "น้ำท่วมฉับพลัน \"พ่อเฒ่า\" ตกบ้านจมสิ้นใจอนาถ"
-      },
-      {
-        "field": "mainbar",
-        "value": "./assets/bar/BAR.png"
-      },
-      {
-        "field": "headbar",
-        "value": "./assets/head/top-bar-red.png"
-      }
-    ]
-  },
-  {
-    "itemID": "mainbar",
-    "relpath": "Example/New-bar4.html",
-    "out": "manual",
-    "head": "ประเด็นร้อน",
-    "topic": "ทุกข์ซ้ำชาวนา โจรลักเครื่องสูบน้ำ หวั่นข้าวเน่าตาย",
-    "line1": "",
-    "line2": "",
-    "name1": "",
-    "name2": "",
-    "logo": "",
-    "mainbar": "./assets/bar/BAR.png",
-    "headbar": "./assets/head/top-bar-red.png",
-    "DataFields": [
-      {
-        "field": "f0",
-        "value": "ประเด็นร้อน"
-      },
-      {
-        "field": "f1",
-        "value": "ทุกข์ซ้ำชาวนา โจรลักเครื่องสูบน้ำ หวั่นข้าวเน่าตาย"
-      },
-      {
-        "field": "mainbar",
-        "value": "./assets/bar/BAR.png"
-      },
-      {
-        "field": "headbar",
-        "value": "./assets/head/top-bar-red.png"
-      }
-    ]
-  },
-  {
-    "itemID": "mainbar",
-    "relpath": "Example/New-bar4.html",
-    "out": "manual",
-    "head": "",
-    "topic": "นาทีชีวิต \"กู้ภัย\" ช่วยชาวจีนถูกน้ำซัดติดบนต้นไม้",
-    "line1": "",
-    "line2": "",
-    "name1": "",
-    "name2": "",
-    "logo": "",
-    "mainbar": "./assets/bar/BAR.png",
-    "headbar": "",
-    "DataFields": [
-      {
-        "field": "f0",
-        "value": ""
-      },
-      {
-        "field": "f1",
-        "value": "นาทีชีวิต \"กู้ภัย\" ช่วยชาวจีนถูกน้ำซัดติดบนต้นไม้"
-      },
-      {
-        "field": "mainbar",
-        "value": "./assets/bar/BAR.png"
-      },
-      {
-        "field": "headbar",
-        "value": ""
-      }
-    ]
-  }
-]
+{
+  "blocks": [
+    {
+      "id": "block-1",
+      "title": "ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ",
+      "collapsed": false
+    }
+  ],
+  "items": [
+    {
+      "itemID": "mainbar",
+      "relpath": "Example/New-bar4.html",
+      "out": "manual",
+      "head": "สถานการณ์เด่น",
+      "topic": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต",
+      "line1": "",
+      "line2": "",
+      "name1": "",
+      "name2": "",
+      "logo": "",
+      "mainbar": "./assets/bar/BAR.png",
+      "headbar": "./assets/head/top-bar-red.png",
+      "DataFields": [
+        {
+          "field": "f0",
+          "value": "สถานการณ์เด่น"
+        },
+        {
+          "field": "f1",
+          "value": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต"
+        },
+        {
+          "field": "mainbar",
+          "value": "./assets/bar/BAR.png"
+        },
+        {
+          "field": "headbar",
+          "value": "./assets/head/top-bar-red.png"
+        }
+      ],
+      "webplayout": "1",
+      "customFields": [],
+      "blockId": "block-1"
+    },
+    {
+      "itemID": "mainbar",
+      "relpath": "Example/New-bar4.html",
+      "out": "manual",
+      "head": "ประเด็นร้อน",
+      "topic": "ระทึก น้ำท่วมห้องเช่าทรุดตัว ผู้อาศัยอพยพวุ่น",
+      "line1": "",
+      "line2": "",
+      "name1": "",
+      "name2": "",
+      "logo": "",
+      "mainbar": "./assets/bar/BAR.png",
+      "headbar": "./assets/head/top-bar-red.png",
+      "DataFields": [
+        {
+          "field": "f0",
+          "value": "ประเด็นร้อน"
+        },
+        {
+          "field": "f1",
+          "value": "ระทึก น้ำท่วมห้องเช่าทรุดตัว ผู้อาศัยอพยพวุ่น"
+        },
+        {
+          "field": "mainbar",
+          "value": "./assets/bar/BAR.png"
+        },
+        {
+          "field": "headbar",
+          "value": "./assets/head/top-bar-red.png"
+        }
+      ],
+      "webplayout": "1",
+      "customFields": [],
+      "blockId": "block-1"
+    },
+    {
+      "itemID": "mainbar",
+      "relpath": "Example/New-bar4.html",
+      "out": "manual",
+      "head": "ประเด็นร้อน",
+      "topic": "น้ำท่วมฉับพลัน \"พ่อเฒ่า\" ตกบ้านจมสิ้นใจอนาถ",
+      "line1": "",
+      "line2": "",
+      "name1": "",
+      "name2": "",
+      "logo": "",
+      "mainbar": "./assets/bar/BAR.png",
+      "headbar": "./assets/head/top-bar-red.png",
+      "DataFields": [
+        {
+          "field": "f0",
+          "value": "ประเด็นร้อน"
+        },
+        {
+          "field": "f1",
+          "value": "น้ำท่วมฉับพลัน \"พ่อเฒ่า\" ตกบ้านจมสิ้นใจอนาถ"
+        },
+        {
+          "field": "mainbar",
+          "value": "./assets/bar/BAR.png"
+        },
+        {
+          "field": "headbar",
+          "value": "./assets/head/top-bar-red.png"
+        }
+      ],
+      "blockId": "block-1"
+    },
+    {
+      "itemID": "mainbar",
+      "relpath": "Example/New-bar4.html",
+      "out": "manual",
+      "head": "ประเด็นร้อน",
+      "topic": "ทุกข์ซ้ำชาวนา โจรลักเครื่องสูบน้ำ หวั่นข้าวเน่าตาย",
+      "line1": "",
+      "line2": "",
+      "name1": "",
+      "name2": "",
+      "logo": "",
+      "mainbar": "./assets/bar/BAR.png",
+      "headbar": "./assets/head/top-bar-red.png",
+      "DataFields": [
+        {
+          "field": "f0",
+          "value": "ประเด็นร้อน"
+        },
+        {
+          "field": "f1",
+          "value": "ทุกข์ซ้ำชาวนา โจรลักเครื่องสูบน้ำ หวั่นข้าวเน่าตาย"
+        },
+        {
+          "field": "mainbar",
+          "value": "./assets/bar/BAR.png"
+        },
+        {
+          "field": "headbar",
+          "value": "./assets/head/top-bar-red.png"
+        }
+      ],
+      "blockId": "block-1"
+    },
+    {
+      "itemID": "mainbar",
+      "relpath": "Example/New-bar4.html",
+      "out": "manual",
+      "head": "",
+      "topic": "นาทีชีวิต \"กู้ภัย\" ช่วยชาวจีนถูกน้ำซัดติดบนต้นไม้",
+      "line1": "",
+      "line2": "",
+      "name1": "",
+      "name2": "",
+      "logo": "",
+      "mainbar": "./assets/bar/BAR.png",
+      "headbar": "",
+      "DataFields": [
+        {
+          "field": "f0",
+          "value": ""
+        },
+        {
+          "field": "f1",
+          "value": "นาทีชีวิต \"กู้ภัย\" ช่วยชาวจีนถูกน้ำซัดติดบนต้นไม้"
+        },
+        {
+          "field": "mainbar",
+          "value": "./assets/bar/BAR.png"
+        },
+        {
+          "field": "headbar",
+          "value": ""
+        }
+      ],
+      "blockId": "block-1"
+    }
+  ]
+}

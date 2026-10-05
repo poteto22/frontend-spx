@@ -15,8 +15,9 @@ export class ControllerView {
   }
 
   subscribeStore() {
-    this.store.subscribe('items', (items) => this.renderPlaylist(items));
-    this.store.subscribe('activeOnAirItem', () => this.renderPlaylist(this.store.getState().items));
+    this.store.subscribe('items', () => this.renderPlaylist());
+    this.store.subscribe('blocks', () => this.renderPlaylist());
+    this.store.subscribe('activeOnAirItem', () => this.renderPlaylist());
     this.store.subscribe('config', (config) => this.populateLogoSelect(config));
   }
 
@@ -408,97 +409,292 @@ export class ControllerView {
     }
 
     container.innerHTML = '';
-    let draggedIndex = null;
 
-    items.forEach((item, idx) => {
-      const isSelected = idx === this.selectedItemIndex;
-      const isOnAir = activeOnAirItem && (activeOnAirItem.itemID === item.itemID && activeOnAirItem.topic === item.topic && activeOnAirItem.head === item.head);
+    // If blocks exist, group playlist by news blocks
+    if (blocks && blocks.length > 0) {
+      blocks.forEach((block, bIdx) => {
+        const blockGroup = document.createElement('div');
+        blockGroup.className = `ctrl-block-group ${block.collapsed ? 'is-collapsed' : ''}`;
+        blockGroup.dataset.blockId = block.id;
 
-      const el = document.createElement('div');
-      el.className = `playlist-item ${isSelected ? 'selected' : ''} ${isOnAir ? 'onair' : ''}`;
-      el.setAttribute('draggable', 'true');
+        const blockItems = [];
+        items.forEach((item, globalIdx) => {
+          if (item.blockId === block.id) {
+            blockItems.push({ item, globalIdx });
+          }
+        });
 
-      const itemID = item.itemID || 'mainbar';
-      let headDisplay = item.head || '';
-      let topicDisplay = item.topic || '';
-      if (itemID === 'logo') {
-        headDisplay = item.head ? `${item.head} (Logo)` : 'Logo CG';
-        topicDisplay = `Logo: ${item.logo || '-'}`;
-      } else if (itemID === 'bar2line') {
-        headDisplay = item.head ? `${item.head} (บาร์ 2 บรรทัด)` : 'บาร์ 2 บรรทัด';
-        topicDisplay = `L1: ${item.line1 || '-'} | L2: ${item.line2 || '-'}`;
-      } else if (itemID === 'bar2name') {
-        headDisplay = item.head ? `${item.head} (บาร์พิธีกร 2 คน)` : 'บาร์พิธีกร 2 คน';
-        topicDisplay = `พิธีกร: ${item.name1 || '-'} & ${item.name2 || '-'} (${item.line2 || '-'})`;
-      }
+        const hasOnAir = blockItems.some(({ item }) =>
+          activeOnAirItem && (activeOnAirItem.itemID === item.itemID && activeOnAirItem.topic === item.topic && activeOnAirItem.head === item.head)
+        );
 
-      el.innerHTML = `
-        <div class="ctrl-playlist-item-left">
-          <div class="drag-handle" title="ลากเพื่อเปลี่ยนลำดับ">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="9" cy="5" r="1.5"></circle><circle cx="15" cy="5" r="1.5"></circle>
-              <circle cx="9" cy="12" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle>
-              <circle cx="9" cy="19" r="1.5"></circle><circle cx="15" cy="19" r="1.5"></circle>
-            </svg>
+        // Block Header
+        const header = document.createElement('div');
+        header.className = 'ctrl-block-header';
+        header.innerHTML = `
+          <div class="flex-center gap-2">
+            <div class="drag-handle-block" draggable="true" title="ลากเพื่อสลับลำดับบล็อกข่าว">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="9" cy="5" r="1.5"></circle><circle cx="15" cy="5" r="1.5"></circle>
+                <circle cx="9" cy="12" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle>
+                <circle cx="9" cy="19" r="1.5"></circle><circle cx="15" cy="19" r="1.5"></circle>
+              </svg>
+            </div>
+            <button class="btn-block-collapse" title="${block.collapsed ? 'ขยาย' : 'ย่อลง'}">
+              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <span class="ctrl-block-title">📁 ${block.title}</span>
+            <span class="block-count-badge fs-xs">${blockItems.length}</span>
+            ${hasOnAir ? '<span class="badge badge-success fs-xs">● ON-AIR</span>' : ''}
           </div>
-          <span class="ctrl-item-index font-mono">#${idx + 1}</span>
-          <div class="ctrl-item-content">
-            ${headDisplay ? `<div class="ctrl-item-head">${headDisplay}</div>` : ''}
-            <div class="ctrl-item-topic">${topicDisplay}</div>
+          <div class="flex-center gap-1">
+            <button class="btn-icon btn-block-up" title="เลื่อนบล็อกขึ้น" ${bIdx === 0 ? 'disabled' : ''}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            </button>
+            <button class="btn-icon btn-block-down" title="เลื่อนบล็อกลง" ${bIdx === blocks.length - 1 ? 'disabled' : ''}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
           </div>
-        </div>
-        <div class="flex-center gap-2">
-          <span class="badge ${isOnAir ? 'badge-success' : (isSelected ? 'badge-info' : 'badge-neutral')}">
-            ${isOnAir ? '● ON-AIR' : (isSelected ? 'SELECTED' : 'IDLE')}
-          </span>
-        </div>
-      `;
+        `;
 
-      // Selection on click
-      el.addEventListener('click', () => {
-        this.selectedItemIndex = idx;
-        this.renderPlaylist(items);
+        header.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-block-up') || e.target.closest('.btn-block-down') || e.target.closest('.drag-handle-block')) return;
+          this.store.toggleBlockCollapse(block.id);
+        });
+
+        header.querySelector('.btn-block-up').addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.store.moveBlock(bIdx, bIdx - 1);
+        });
+        header.querySelector('.btn-block-down').addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.store.moveBlock(bIdx, bIdx + 1);
+        });
+
+        // Block Dragging in controller desk
+        const blockGrip = header.querySelector('.drag-handle-block');
+        blockGrip.addEventListener('dragstart', (e) => {
+          e.stopPropagation();
+          window.__ctrlDragData = { type: 'block', blockIndex: bIdx, blockId: block.id };
+          blockGroup.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', JSON.stringify(window.__ctrlDragData));
+        });
+        blockGrip.addEventListener('dragend', () => {
+          blockGroup.classList.remove('dragging');
+          window.__ctrlDragData = null;
+          container.querySelectorAll('.ctrl-block-group').forEach(g => g.classList.remove('drag-over-block'));
+        });
+
+        header.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          blockGroup.classList.add('drag-over-block');
+        });
+        header.addEventListener('dragleave', (e) => {
+          if (!header.contains(e.relatedTarget)) {
+            blockGroup.classList.remove('drag-over-block');
+          }
+        });
+        header.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          blockGroup.classList.remove('drag-over-block');
+          const data = window.__ctrlDragData;
+          if (!data) return;
+          if (data.type === 'block' && data.blockIndex !== bIdx) {
+            this.store.moveBlock(data.blockIndex, bIdx);
+          } else if (data.type === 'item') {
+            this.store.moveItemToBlock(data.globalIndex, block.id);
+          }
+        });
+
+        // Block items container
+        const itemsBox = document.createElement('div');
+        itemsBox.className = 'ctrl-block-items';
+
+        itemsBox.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          itemsBox.classList.add('drag-over-block');
+        });
+        itemsBox.addEventListener('dragleave', (e) => {
+          if (!itemsBox.contains(e.relatedTarget)) {
+            itemsBox.classList.remove('drag-over-block');
+          }
+        });
+        itemsBox.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          itemsBox.classList.remove('drag-over-block');
+          const data = window.__ctrlDragData;
+          if (data && data.type === 'item') {
+            this.store.moveItemToBlock(data.globalIndex, block.id);
+          }
+        });
+
+        if (blockItems.length === 0) {
+          itemsBox.innerHTML = '<div class="text-muted fs-xs p-2 text-center border-dashed rounded">ไม่มีประเด็นในบล็อกนี้ (ลากมาใส่ได้)</div>';
+        } else {
+          blockItems.forEach(({ item, globalIdx }) => {
+            const el = this.createPlaylistItemElement(item, globalIdx, activeOnAirItem, items);
+            itemsBox.appendChild(el);
+          });
+        }
+
+        blockGroup.appendChild(header);
+        blockGroup.appendChild(itemsBox);
+        container.appendChild(blockGroup);
       });
 
-      // Drag and Drop Events
-      el.addEventListener('dragstart', (e) => {
-        draggedIndex = idx;
-        el.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', idx.toString());
-      });
-
-      el.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        el.classList.add('drag-over');
-      });
-
-      el.addEventListener('dragleave', () => {
-        el.classList.remove('drag-over');
-      });
-
-      el.addEventListener('drop', (e) => {
-        e.preventDefault();
-        el.classList.remove('drag-over');
-        const fromIndex = draggedIndex !== null ? draggedIndex : parseInt(e.dataTransfer.getData('text/plain'), 10);
-        const toIndex = idx;
-
-        if (fromIndex !== null && !isNaN(fromIndex) && fromIndex !== toIndex) {
-          this.store.moveItem(fromIndex, toIndex);
-          this.selectedItemIndex = toIndex;
-          this.showToast(`เปลี่ยนลำดับรายการ #${fromIndex + 1} ➔ #${toIndex + 1}`, 'info');
+      // Unassigned items in controller desk
+      const unassignedItems = [];
+      items.forEach((item, globalIdx) => {
+        if (!item.blockId || !blocks.some(b => b.id === item.blockId)) {
+          unassignedItems.push({ item, globalIdx });
         }
       });
 
-      el.addEventListener('dragend', () => {
-        draggedIndex = null;
-        container.querySelectorAll('.playlist-item').forEach((itemEl) => {
-          itemEl.classList.remove('dragging', 'drag-over');
-        });
-      });
+      if (unassignedItems.length > 0) {
+        const unGroup = document.createElement('div');
+        unGroup.className = 'ctrl-block-group';
+        unGroup.innerHTML = `
+          <div class="ctrl-block-header">
+            <span class="ctrl-block-title fs-xs text-muted">📌 รายการทั่วไป / นอกบล็อก (${unassignedItems.length})</span>
+          </div>
+        `;
+        const unItemsBox = document.createElement('div');
+        unItemsBox.className = 'ctrl-block-items';
 
-      container.appendChild(el);
+        unGroup.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        });
+        unGroup.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const data = window.__ctrlDragData;
+          if (data && data.type === 'item') {
+            this.store.moveItemOutOfBlock(data.globalIndex);
+          }
+        });
+
+        unassignedItems.forEach(({ item, globalIdx }) => {
+          const el = this.createPlaylistItemElement(item, globalIdx, activeOnAirItem, items);
+          unItemsBox.appendChild(el);
+        });
+
+        unGroup.appendChild(unItemsBox);
+        container.appendChild(unGroup);
+      }
+    } else {
+      // Flat list fallback
+      items.forEach((item, idx) => {
+        const el = this.createPlaylistItemElement(item, idx, activeOnAirItem, items);
+        container.appendChild(el);
+      });
+    }
+  }
+
+  createPlaylistItemElement(item, idx, activeOnAirItem, items) {
+    const isSelected = idx === this.selectedItemIndex;
+    const isOnAir = activeOnAirItem && (activeOnAirItem.itemID === item.itemID && activeOnAirItem.topic === item.topic && activeOnAirItem.head === item.head);
+
+    const el = document.createElement('div');
+    el.className = `playlist-item ${isSelected ? 'selected' : ''} ${isOnAir ? 'onair' : ''}`;
+    el.setAttribute('draggable', 'true');
+
+    const itemID = item.itemID || 'mainbar';
+    let headDisplay = item.head || '';
+    let topicDisplay = item.topic || '';
+    if (itemID === 'logo') {
+      headDisplay = item.head ? `${item.head} (Logo)` : 'Logo CG';
+      topicDisplay = `Logo: ${item.logo || '-'}`;
+    } else if (itemID === 'bar2line') {
+      headDisplay = item.head ? `${item.head} (บาร์ 2 บรรทัด)` : 'บาร์ 2 บรรทัด';
+      topicDisplay = `L1: ${item.line1 || '-'} | L2: ${item.line2 || '-'}`;
+    } else if (itemID === 'bar2name') {
+      headDisplay = item.head ? `${item.head} (บาร์พิธีกร 2 คน)` : 'บาร์พิธีกร 2 คน';
+      topicDisplay = `พิธีกร: ${item.name1 || '-'} & ${item.name2 || '-'} (${item.line2 || '-'})`;
+    }
+
+    el.innerHTML = `
+      <div class="ctrl-playlist-item-left">
+        <div class="drag-handle" title="ลากเพื่อเปลี่ยนลำดับหรือย้ายบล็อก">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="5" r="1.5"></circle><circle cx="15" cy="5" r="1.5"></circle>
+            <circle cx="9" cy="12" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle>
+            <circle cx="9" cy="19" r="1.5"></circle><circle cx="15" cy="19" r="1.5"></circle>
+          </svg>
+        </div>
+        <span class="ctrl-item-index font-mono">#${idx + 1}</span>
+        <div class="ctrl-item-content">
+          ${headDisplay ? `<div class="ctrl-item-head">${headDisplay}</div>` : ''}
+          <div class="ctrl-item-topic">${topicDisplay}</div>
+        </div>
+      </div>
+      <div class="flex-center gap-2">
+        <span class="badge ${isOnAir ? 'badge-success' : (isSelected ? 'badge-info' : 'badge-neutral')}">
+          ${isOnAir ? '● ON-AIR' : (isSelected ? 'SELECTED' : 'IDLE')}
+        </span>
+      </div>
+    `;
+
+    // Selection on click
+    el.addEventListener('click', () => {
+      this.selectedItemIndex = idx;
+      this.renderPlaylist(items);
     });
+
+    // Drag and Drop Events
+    el.addEventListener('dragstart', (e) => {
+      e.stopPropagation();
+      const dragData = { type: 'item', globalIndex: idx };
+      window.__ctrlDragData = dragData;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+    });
+
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+      el.classList.add('drag-over');
+    });
+
+    el.addEventListener('dragleave', (e) => {
+      e.stopPropagation();
+      el.classList.remove('drag-over');
+    });
+
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.remove('drag-over');
+      const dragData = window.__ctrlDragData || (e.dataTransfer.getData('text/plain') ? JSON.parse(e.dataTransfer.getData('text/plain')) : null);
+      if (!dragData || dragData.type !== 'item') return;
+
+      const fromIndex = dragData.globalIndex;
+      const toIndex = idx;
+
+      if (fromIndex !== null && !isNaN(fromIndex) && fromIndex !== toIndex) {
+        this.store.moveItem(fromIndex, toIndex);
+        this.selectedItemIndex = toIndex;
+        this.showToast(`เปลี่ยนลำดับรายการ #${fromIndex + 1} ➔ #${toIndex + 1}`, 'info');
+      }
+    });
+
+    el.addEventListener('dragend', () => {
+      window.__ctrlDragData = null;
+      document.querySelectorAll('.playlist-item').forEach((itemEl) => {
+        itemEl.classList.remove('dragging', 'drag-over');
+      });
+    });
+
+    return el;
+  }
   }
 }

@@ -20,6 +20,7 @@ export class EditorComponent {
 
     this.inputIndex = document.getElementById('edit-item-index');
     this.selectId = document.getElementById('edit-item-id');
+    this.selectBlock = document.getElementById('edit-item-block');
     this.stepFields = document.getElementById('editor-step-fields');
 
     // Head and Quick Presets
@@ -207,8 +208,31 @@ export class EditorComponent {
     }
   }
 
-  openForNew() {
+  populateBlockOptions(selectedBlockId = '') {
+    if (!this.selectBlock) return;
+    const blocks = this.store.getState().blocks || [];
+    this.selectBlock.innerHTML = '';
+
+    const noneOpt = document.createElement('option');
+    noneOpt.value = '';
+    noneOpt.textContent = '-- รายการทั่วไป (ไม่สังกัดบล็อกข่าว) --';
+    this.selectBlock.appendChild(noneOpt);
+
+    blocks.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = `📁 ${b.title}`;
+      this.selectBlock.appendChild(opt);
+    });
+
+    if (selectedBlockId) {
+      this.selectBlock.value = selectedBlockId;
+    }
+  }
+
+  openForNew(defaultBlockId = null) {
     this.populateSelectOptions(this.store.getState().config);
+    this.populateBlockOptions(defaultBlockId || '');
 
     this.inputIndex.value = '-1';
     this.dialogTitle.textContent = 'สร้างรายการ CG ใหม่';
@@ -242,6 +266,7 @@ export class EditorComponent {
     if (index < 0 || index >= items.length) return;
 
     const item = items[index];
+    this.populateBlockOptions(item.blockId || '');
     this.inputIndex.value = index.toString();
     this.dialogTitle.textContent = `แก้ไขรายการ CG #${index + 1}`;
 
@@ -305,10 +330,11 @@ export class EditorComponent {
     const mainbar = this.selectMainbar.value || './assets/bar/BAR.png';
     const headbar = this.selectHeadbar.value;
     const layer = this.inputLayer.value.trim() || '1';
-    const out = this.inputOut.value;
+    const blockId = this.selectBlock ? (this.selectBlock.value || null) : null;
 
     let itemData = {
       itemID,
+      blockId,
       relpath: template,
       webplayout: layer,
       out

@@ -93,14 +93,26 @@ function getConfig() {
   return defaultConfig;
 }
 
-// Load persisted items if data/rundown.json exists
+let blocksStore = [];
+
+// Load persisted items & blocks if data/rundown.json exists
 if (fs.existsSync(DATA_FILE)) {
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) itemsStore = parsed;
-    else if (parsed.templates) itemsStore = parsed.templates;
-    else if (parsed.items) itemsStore = parsed.items;
+    if (Array.isArray(parsed)) {
+      itemsStore = parsed;
+    } else if (parsed.items && Array.isArray(parsed.items)) {
+      itemsStore = parsed.items;
+      if (parsed.blocks && Array.isArray(parsed.blocks)) {
+        blocksStore = parsed.blocks;
+      }
+    } else if (parsed.templates && Array.isArray(parsed.templates)) {
+      itemsStore = parsed.templates;
+      if (parsed.blocks && Array.isArray(parsed.blocks)) {
+        blocksStore = parsed.blocks;
+      }
+    }
   } catch (e) {
     console.error('Error reading data file:', e.message);
   }
@@ -271,15 +283,24 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const payload = JSON.parse(body);
-        if (Array.isArray(payload)) itemsStore = payload;
-        else if (payload.items) itemsStore = payload.items;
-        else if (payload.templates) itemsStore = payload.templates;
+        if (Array.isArray(payload)) {
+          itemsStore = payload;
+        } else if (payload.items) {
+          itemsStore = payload.items;
+          if (Array.isArray(payload.blocks)) blocksStore = payload.blocks;
+        } else if (payload.templates) {
+          itemsStore = payload.templates;
+          if (Array.isArray(payload.blocks)) blocksStore = payload.blocks;
+        }
 
         fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
-        fs.writeFileSync(DATA_FILE, JSON.stringify(itemsStore, null, 2), 'utf8');
+        const dataToSave = (blocksStore && blocksStore.length > 0)
+          ? { blocks: blocksStore, items: itemsStore }
+          : itemsStore;
+        fs.writeFileSync(DATA_FILE, JSON.stringify(dataToSave, null, 2), 'utf8');
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ status: 'ok', count: itemsStore.length }));
+        res.end(JSON.stringify({ status: 'ok', count: itemsStore.length, blocksCount: blocksStore.length }));
       } catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ error: err.message }));
@@ -288,10 +309,21 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API Endpoint to fetch all items as JSON array
+  // API Endpoint to fetch all items as JSON array or object
   if (req.method === 'GET' && pathname === '/api/items') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(itemsStore, null, 2));
+    if (blocksStore && blocksStore.length > 0) {
+      res.end(JSON.stringify({ blocks: blocksStore, items: itemsStore }, null, 2));
+    } else {
+      res.end(JSON.stringify(itemsStore, null, 2));
+    }
+    return;
+  }
+
+  // API Endpoint for blocks
+  if (req.method === 'GET' && pathname === '/api/blocks') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(blocksStore, null, 2));
     return;
   }
 

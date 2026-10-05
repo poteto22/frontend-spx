@@ -46,9 +46,11 @@ export class Store {
         logoOptions: []
       },
       
+      blocks: [],
       items: [
         {
           itemID: 'mainbar',
+          blockId: 'block-1',
           relpath: 'Example/New-bar4.html',
           out: 'manual',
           head: 'หัวเรื่อง',
@@ -64,6 +66,7 @@ export class Store {
         },
         {
           itemID: 'bar2line',
+          blockId: 'block-1',
           relpath: 'Example/New-bar4.html',
           out: 'manual',
           head: '',
@@ -128,9 +131,26 @@ export class Store {
     try {
       const res = await fetch('/api/items');
       if (res.ok) {
-        const items = await res.json();
-        if (Array.isArray(items) && items.length > 0) {
-          this.setState({ items });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          if (data.length > 0) {
+            // Check if any items have blockId, if not, create initial block
+            const blocks = this.state.blocks && this.state.blocks.length > 0
+              ? this.state.blocks
+              : [{ id: 'block-1', title: 'ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ', collapsed: false }];
+            const items = data.map(it => ({ ...it, blockId: it.blockId || 'block-1' }));
+            this.setState({ items, blocks });
+          }
+        } else if (data && data.items) {
+          let blocks = data.blocks || [];
+          if (blocks.length === 0 && data.items.length > 0) {
+            blocks = [{ id: 'block-1', title: 'ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ', collapsed: false }];
+          }
+          const items = (data.items || []).map(it => ({
+            ...it,
+            blockId: it.blockId || (blocks[0] ? blocks[0].id : null)
+          }));
+          this.setState({ items, blocks });
         }
       }
     } catch (e) {
@@ -146,7 +166,7 @@ export class Store {
     const prevState = { ...this.state };
     this.state = { ...this.state, ...partialState };
 
-    if (partialState.items) {
+    if (partialState.items || partialState.blocks) {
       this.triggerAutoSave();
     }
 
@@ -169,21 +189,26 @@ export class Store {
   }
 
   async performAutoSave() {
-    const { items, isConnected, currentProject, currentRundownName } = this.state;
+    const { items, blocks, isConnected, currentProject, currentRundownName } = this.state;
 
     try {
+      const payload = {
+        blocks: blocks || [],
+        items: items || []
+      };
+
       await fetch('/api/items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(items)
+        body: JSON.stringify(payload)
       });
 
       if (isConnected && this.api && currentProject && currentRundownName) {
-        const payload = {
+        const spxPayload = {
           comment: 'Auto-saved from SPX Front-End Workspace',
           templates: items
         };
-        await this.api.saveRundownJSON(currentProject, currentRundownName, payload).catch(() => null);
+        await this.api.saveRundownJSON(currentProject, currentRundownName, spxPayload).catch(() => null);
       }
 
       this.setState({ autoSaveStatus: 'saved' });
@@ -245,6 +270,7 @@ export class Store {
   addItem(itemData) {
     const newItem = {
       itemID: itemData.itemID || 'mainbar',
+      blockId: itemData.blockId !== undefined ? itemData.blockId : null,
       relpath: itemData.relpath || 'Example/New-bar4.html',
       out: itemData.out || 'manual',
       head: itemData.head !== undefined ? itemData.head : '',
@@ -294,6 +320,13 @@ export class Store {
     if (toIndex < 0 || toIndex >= this.state.items.length) return;
     const newItems = [...this.state.items];
     const [moved] = newItems.splice(fromIndex, 1);
+    
+    // Inherit the target position's blockId if dropped on/adjacent to an item
+    const targetItem = newItems[toIndex];
+    if (targetItem && targetItem.blockId !== undefined) {
+      moved.blockId = targetItem.blockId;
+    }
+    
     newItems.splice(toIndex, 0, moved);
     this.setState({ items: newItems });
   }
@@ -307,5 +340,130 @@ export class Store {
     const newItems = [...this.state.items];
     newItems.splice(index + 1, 0, copy);
     this.setState({ items: newItems });
+  }
+
+  // --- News Block Management Methods ---
+
+  addBlock(title, insertAtIndex = -1) {
+    const id = 'block_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    const newBlock = {
+      id,
+      title: title && title.trim() ? title.trim() : `บล็อกข่าวที่ ${(this.state.blocks || []).length + 1}`,
+      collapsed: false
+    };
+
+    const blocks = [...(this.state.blocks || [])];
+    if (insertAtIndex >= 0 && insertAtIndex <= blocks.length) {
+      blocks.splice(insertAtIndex, 0, newBlock);
+    } else {
+      blocks.push(newBlock);
+    }
+
+    this.setState({ blocks });
+    return newBlock;
+  }
+
+  updateBlock(id, fields) {
+    const blocks = (this.state.blocks || []).map(b => {
+      if (b.id === id) {
+        return { ...b, ...fields };
+      }
+      return b;
+    });
+    this.setState({ blocks });
+  }
+
+  deleteBlock(id, deleteItemsInside = false) {
+    const blocks = (this.state.blocks || []).filter(b => b.id !== id);
+    let items = [...this.state.items];
+
+    if (deleteItemsInside) {
+      items = items.filter(item => item.blockId !== id);
+    } else {
+      items = items.map(item => {
+        if (item.blockId === id) {
+          return { ...item, blockId: null };
+        }
+        return item;
+      });
+    }
+
+    this.setState({ blocks, items });
+  }
+
+  moveBlock(fromIndex, toIndex) {
+    const blocks = [...(this.state.blocks || [])];
+    if (fromIndex < 0 || fromIndex >= blocks.length || toIndex < 0 || toIndex >= blocks.length) return;
+
+    const [movedBlock] = blocks.splice(fromIndex, 1);
+    blocks.splice(toIndex, 0, movedBlock);
+
+    // Reorder flat items sequence so items in blocks follow the new block order
+    const reorderedItems = [];
+    blocks.forEach(b => {
+      const blockItems = this.state.items.filter(it => it.blockId === b.id);
+      reorderedItems.push(...blockItems);
+    });
+    const unassignedItems = this.state.items.filter(it => !it.blockId || !blocks.some(b => b.id === it.blockId));
+    reorderedItems.push(...unassignedItems);
+
+    this.setState({ blocks, items: reorderedItems });
+  }
+
+  toggleBlockCollapse(id) {
+    const blocks = (this.state.blocks || []).map(b => {
+      if (b.id === id) {
+        return { ...b, collapsed: !b.collapsed };
+      }
+      return b;
+    });
+    this.setState({ blocks });
+  }
+
+  moveItemToBlock(itemIndex, targetBlockId, targetIndexWithinBlock = -1) {
+    if (itemIndex < 0 || itemIndex >= this.state.items.length) return;
+    const items = [...this.state.items];
+    const [item] = items.splice(itemIndex, 1);
+    item.blockId = targetBlockId;
+
+    if (targetBlockId) {
+      const blockItemsIndices = [];
+      items.forEach((it, idx) => {
+        if (it.blockId === targetBlockId) blockItemsIndices.push(idx);
+      });
+
+      if (blockItemsIndices.length === 0) {
+        const blocks = this.state.blocks || [];
+        const currentBlockIdx = blocks.findIndex(b => b.id === targetBlockId);
+        let insertPos = items.length;
+        for (let i = currentBlockIdx - 1; i >= 0; i--) {
+          const prevBlockId = blocks[i].id;
+          const lastIdxOfPrev = items.map(it => it.blockId).lastIndexOf(prevBlockId);
+          if (lastIdxOfPrev !== -1) {
+            insertPos = lastIdxOfPrev + 1;
+            break;
+          }
+        }
+        items.splice(insertPos, 0, item);
+      } else {
+        if (targetIndexWithinBlock >= 0 && targetIndexWithinBlock < blockItemsIndices.length) {
+          items.splice(blockItemsIndices[targetIndexWithinBlock], 0, item);
+        } else {
+          const lastIndex = blockItemsIndices[blockItemsIndices.length - 1];
+          items.splice(lastIndex + 1, 0, item);
+        }
+      }
+    } else {
+      items.push(item);
+    }
+
+    this.setState({ items });
+  }
+
+  moveItemOutOfBlock(itemIndex) {
+    if (itemIndex < 0 || itemIndex >= this.state.items.length) return;
+    const items = [...this.state.items];
+    items[itemIndex] = { ...items[itemIndex], blockId: null };
+    this.setState({ items });
   }
 }
