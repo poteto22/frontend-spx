@@ -97,8 +97,12 @@
 }
 
 .onair-item-topic {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .onair-meta {
@@ -143,6 +147,13 @@
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
   user-select: none;
+}
+
+/* 4-Column Layout specifically for Main Rundown Overview Dashboard */
+.overview-dashboard .item-row-card,
+.item-row-card.overview-row-card {
+  grid-template-columns: 44px 110px 1fr 90px;
+  gap: 1.25rem;
 }
 
 .item-row-card:hover {
@@ -193,7 +204,9 @@
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.4;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .item-row-assets {

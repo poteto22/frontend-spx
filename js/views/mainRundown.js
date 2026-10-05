@@ -191,7 +191,7 @@ export class MainRundownView {
     const renderItemRow = (item, idx) => {
       const row = document.createElement('div');
       const isOnAir = activeOnAirItem && (activeOnAirItem.itemID === item.itemID && activeOnAirItem.topic === item.topic && activeOnAirItem.head === item.head);
-      row.className = `item-row-card ${isOnAir ? 'is-onair' : ''}`;
+      row.className = `item-row-card overview-row-card ${isOnAir ? 'is-onair' : ''}`;
 
       const itemID = item.itemID || 'mainbar';
       let headDisplay = item.head || '';
@@ -205,6 +205,8 @@ export class MainRundownView {
       } else if (itemID === 'bar2name') {
         headDisplay = item.head ? `${item.head} (บาร์พิธีกร 2 คน)` : 'บาร์พิธีกร 2 คน';
         topicDisplay = `พิธีกร: ${item.name1 || '-'} & ${item.name2 || '-'} (${item.line2 || '-'})`;
+      } else {
+        topicDisplay = item.topic || '(ไม่มีข้อความประเด็น)';
       }
 
       row.innerHTML = `
