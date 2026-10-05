@@ -47,40 +47,7 @@ export class Store {
       },
       
       blocks: [],
-      items: [
-        {
-          itemID: 'mainbar',
-          blockId: 'block-1',
-          relpath: 'Example/New-bar4.html',
-          out: 'manual',
-          head: 'หัวเรื่อง',
-          topic: 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ',
-          mainbar: './assets/bar/MAIN BAR.png',
-          headbar: './assets/head/top-bar-1.png',
-          DataFields: [
-            { field: 'f0', value: 'หัวเรื่อง' },
-            { field: 'f1', value: 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ' },
-            { field: 'mainbar', value: './assets/bar/MAIN BAR.png' },
-            { field: 'headbar', value: './assets/head/top-bar-1.png' }
-          ]
-        },
-        {
-          itemID: 'bar2line',
-          blockId: 'block-1',
-          relpath: 'Example/New-bar4.html',
-          out: 'manual',
-          head: '',
-          topic: 'รายงานสดสถานการณ์น้ำท่วมและมาตรการช่วยเหลือประชาชน',
-          mainbar: './assets/bar/MAIN BAR.png',
-          headbar: '',
-          DataFields: [
-            { field: 'f0', value: '' },
-            { field: 'f1', value: 'รายงานสดสถานการณ์น้ำท่วมและมาตรการช่วยเหลือประชาชน' },
-            { field: 'mainbar', value: './assets/bar/MAIN BAR.png' },
-            { field: 'headbar', value: '' }
-          ]
-        }
-      ],
+      items: [],
 
       activeOnAirItem: null,
       layerStates: {}
@@ -140,6 +107,8 @@ export class Store {
               : [{ id: 'block-1', title: 'ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ', collapsed: false }];
             const items = data.map(it => ({ ...it, blockId: it.blockId || 'block-1' }));
             this.setState({ items, blocks });
+          } else {
+            this.setState({ items: [], blocks: [] });
           }
         } else if (data && data.items) {
           let blocks = data.blocks || [];
@@ -151,6 +120,8 @@ export class Store {
             blockId: it.blockId || (blocks[0] ? blocks[0].id : null)
           }));
           this.setState({ items, blocks });
+        } else {
+          this.setState({ items: [], blocks: [] });
         }
       }
     } catch (e) {

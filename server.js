@@ -8,23 +8,7 @@ const DATA_FILE = path.join(__dirname, 'data', 'rundown.json');
 const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
 
 // Memory store for items
-let itemsStore = [
-  {
-    itemID: 'mainbar',
-    head: 'หัวเรื่อง',
-    topic: 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ',
-    mainbar: './assets/bar/MAIN BAR.png',
-    headbar: './assets/head/top-bar-1.png'
-  },
-  {
-    itemID: 'bar2line',
-    head: 'รายงานสด',
-    line1: 'สถานการณ์น้ำท่วม',
-    line2: 'และมาตรการช่วยเหลือประชาชน',
-    mainbar: './assets/bar/MAIN BAR.png',
-    headbar: ''
-  }
-];
+let itemsStore = [];
 
 // Active items map for each itemID (spx template ID)
 let activeItemsMap = {};
@@ -363,7 +347,7 @@ function formatItemResponse(item, cleanId, req) {
   if (itemID === 'mainbar' || cleanId === 'mainbar') {
     return {
       head: item.head !== undefined ? item.head : '',
-      topic: item.topic !== undefined ? item.topic : 'มอบทุนศึกษา-อุปกรณ์กีฬา รร.ผลิตนักตบทีมชาติ',
+      topic: item.topic !== undefined ? item.topic : '',
       mainbar: toFullUrl(item.mainbar !== undefined ? item.mainbar : './assets/bar/MAIN BAR.png', req),
       headbar: toFullUrl(item.headbar !== undefined ? item.headbar : '', req)
     };
