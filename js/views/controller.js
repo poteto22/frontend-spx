@@ -2,11 +2,17 @@
  * VIEW 3: Rundown Controller Desk (หน้าจอควบคุม Rundown)
  */
 export class ControllerView {
-  constructor(container, api, store, showToast) {
+  constructor(container, api, store, editorDialog, showToast) {
     this.container = container;
     this.api = api;
     this.store = store;
-    this.showToast = showToast;
+    if (typeof editorDialog === 'function') {
+      this.showToast = editorDialog;
+      this.editorDialog = null;
+    } else {
+      this.editorDialog = editorDialog;
+      this.showToast = showToast || (() => {});
+    }
     this.selectedItemIndex = 0;
 
     this.isLogoOnAir = false;
@@ -659,6 +665,13 @@ export class ControllerView {
         <span class="badge ${isOnAir ? 'badge-success' : (isSelected ? 'badge-info' : 'badge-neutral')}">
           ${isOnAir ? '● ON-AIR' : (isSelected ? 'SELECTED' : 'IDLE')}
         </span>
+        <button class="btn btn-xs btn-outline btn-item-edit" title="แก้ไขข้อความแบบเร่งด่วน">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          EDIT
+        </button>
         <button class="btn btn-xs btn-play btn-item-play" title="สั่งเล่นประเด็นนี้ทันที">
           ▶ PLAY
         </button>
@@ -667,10 +680,24 @@ export class ControllerView {
 
     // Selection on click
     el.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-item-play') || e.target.closest('.drag-handle')) return;
+      if (e.target.closest('.btn-item-play') || e.target.closest('.btn-item-edit') || e.target.closest('.drag-handle')) return;
       this.selectedItemIndex = idx;
       this.renderPlaylist(items);
     });
+
+    // Quick Edit on item button
+    const editBtn = el.querySelector('.btn-item-edit');
+    if (editBtn) {
+      editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.selectedItemIndex = idx;
+        if (this.editorDialog) {
+          this.editorDialog.openForEdit(idx);
+        } else {
+          this.showToast('ไม่พบระบบแก้ไขรายการ', 'warning');
+        }
+      });
+    }
 
     const playBtn = el.querySelector('.btn-item-play');
     if (playBtn) {

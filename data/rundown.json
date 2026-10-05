@@ -3,12 +3,12 @@
     {
       "id": "block-1",
       "title": "ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ",
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "block_1791187966211_webz",
       "title": "ข่าวที่ 2: น้ำท่วมอยุทธยา",
-      "collapsed": true
+      "collapsed": false
     }
   ],
   "items": [

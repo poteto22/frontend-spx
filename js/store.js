@@ -293,13 +293,22 @@ export class Store {
   updateItem(index, updatedFields) {
     if (index < 0 || index >= this.state.items.length) return;
     const newItems = [...this.state.items];
+    const prevItem = newItems[index];
     newItems[index] = { ...newItems[index], ...updatedFields };
 
     newItems[index].head = newItems[index].head !== undefined ? newItems[index].head : '';
     newItems[index].headbar = newItems[index].headbar !== undefined ? newItems[index].headbar : '';
     newItems[index].DataFields = this.generateDataFields(newItems[index], updatedFields.customFields || []);
 
-    this.setState({ items: newItems });
+    let activeOnAirItem = this.state.activeOnAirItem;
+    if (activeOnAirItem && (activeOnAirItem === prevItem || (activeOnAirItem.itemID === prevItem.itemID && activeOnAirItem.head === prevItem.head && activeOnAirItem.topic === prevItem.topic))) {
+      activeOnAirItem = newItems[index];
+      if (this.apiClient) {
+        this.apiClient.setActiveItem(newItems[index]).catch(() => null);
+      }
+    }
+
+    this.setState({ items: newItems, activeOnAirItem });
   }
 
   deleteItem(index) {

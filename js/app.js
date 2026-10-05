@@ -107,7 +107,7 @@ class App {
     // Instantiate 4 Screen Views
     this.view1 = new MainRundownView(document.getElementById('view-main-rundown'), this.api, this.store, this.showToast);
     this.view2 = new CreateRundownView(document.getElementById('view-create-rundown'), this.api, this.store, this.editorDialog, this.showToast);
-    this.view3 = new ControllerView(document.getElementById('view-controller'), this.api, this.store, this.showToast);
+    this.view3 = new ControllerView(document.getElementById('view-controller'), this.api, this.store, this.editorDialog, this.showToast);
     this.view4 = new SettingsView(document.getElementById('view-settings'), this.api, this.store, this.showToast);
 
     this.checkConnection();
