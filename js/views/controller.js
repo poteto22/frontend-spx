@@ -314,7 +314,7 @@ export class ControllerView {
     }
 
     const selectedItem = items[this.selectedItemIndex];
-    const activeOnAirItem = this.store.getState().activeOnAirItem;
+    const { activeOnAirItem, blocks = [] } = this.store.getState();
 
     if (selectedBadge) {
       selectedBadge.textContent = selectedItem ? `Selected: #${this.selectedItemIndex + 1} (${selectedItem.itemID})` : 'None';
@@ -695,6 +695,5 @@ export class ControllerView {
     });
 
     return el;
-  }
   }
 }
