@@ -3,45 +3,15 @@
     {
       "id": "block-1",
       "title": "ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ",
-      "collapsed": false
+      "collapsed": true
+    },
+    {
+      "id": "block_1791187966211_webz",
+      "title": "ข่าวที่ 2: น้ำท่วมอยุทธยา",
+      "collapsed": true
     }
   ],
   "items": [
-    {
-      "itemID": "mainbar",
-      "relpath": "Example/New-bar4.html",
-      "out": "manual",
-      "head": "สถานการณ์เด่น",
-      "topic": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต",
-      "line1": "",
-      "line2": "",
-      "name1": "",
-      "name2": "",
-      "logo": "",
-      "mainbar": "./assets/bar/BAR.png",
-      "headbar": "./assets/head/top-bar-red.png",
-      "DataFields": [
-        {
-          "field": "f0",
-          "value": "สถานการณ์เด่น"
-        },
-        {
-          "field": "f1",
-          "value": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต"
-        },
-        {
-          "field": "mainbar",
-          "value": "./assets/bar/BAR.png"
-        },
-        {
-          "field": "headbar",
-          "value": "./assets/head/top-bar-red.png"
-        }
-      ],
-      "webplayout": "1",
-      "customFields": [],
-      "blockId": "block-1"
-    },
     {
       "itemID": "mainbar",
       "relpath": "Example/New-bar4.html",
@@ -147,6 +117,41 @@
       "itemID": "mainbar",
       "relpath": "Example/New-bar4.html",
       "out": "manual",
+      "head": "สถานการณ์เด่น",
+      "topic": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต",
+      "line1": "",
+      "line2": "",
+      "name1": "",
+      "name2": "",
+      "logo": "",
+      "mainbar": "./assets/bar/BAR.png",
+      "headbar": "./assets/head/top-bar-red.png",
+      "DataFields": [
+        {
+          "field": "f0",
+          "value": "สถานการณ์เด่น"
+        },
+        {
+          "field": "f1",
+          "value": "สลด \"เจ้าพระยา\" น้ำไหลเชี่ยวกลืนร่างเด็ก 3 ชีวิต"
+        },
+        {
+          "field": "mainbar",
+          "value": "./assets/bar/BAR.png"
+        },
+        {
+          "field": "headbar",
+          "value": "./assets/head/top-bar-red.png"
+        }
+      ],
+      "webplayout": "1",
+      "customFields": [],
+      "blockId": "block_1791187966211_webz"
+    },
+    {
+      "itemID": "mainbar",
+      "relpath": "Example/New-bar4.html",
+      "out": "manual",
       "head": "",
       "topic": "นาทีชีวิต \"กู้ภัย\" ช่วยชาวจีนถูกน้ำซัดติดบนต้นไม้",
       "line1": "",
@@ -174,7 +179,7 @@
           "value": ""
         }
       ],
-      "blockId": "block-1"
+      "blockId": "block_1791187966211_webz"
     }
   ]
 }

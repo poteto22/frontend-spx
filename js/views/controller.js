@@ -304,6 +304,10 @@ export class ControllerView {
 
     if (!container) return;
 
+    const state = this.store.getState();
+    items = (items && Array.isArray(items)) ? items : (state.items || []);
+    const { activeOnAirItem, blocks = [] } = state;
+
     if (!items || items.length === 0) {
       container.innerHTML = '<div class="text-muted p-3">ไม่มีรายการในคิว</div>';
       return;
@@ -314,7 +318,6 @@ export class ControllerView {
     }
 
     const selectedItem = items[this.selectedItemIndex];
-    const { activeOnAirItem, blocks = [] } = this.store.getState();
 
     if (selectedBadge) {
       selectedBadge.textContent = selectedItem ? `Selected: #${this.selectedItemIndex + 1} (${selectedItem.itemID})` : 'None';
@@ -414,8 +417,6 @@ export class ControllerView {
     if (blocks && blocks.length > 0) {
       blocks.forEach((block, bIdx) => {
         const blockGroup = document.createElement('div');
-        blockGroup.className = `ctrl-block-group ${block.collapsed ? 'is-collapsed' : ''}`;
-        blockGroup.dataset.blockId = block.id;
 
         const blockItems = [];
         items.forEach((item, globalIdx) => {
@@ -427,6 +428,10 @@ export class ControllerView {
         const hasOnAir = blockItems.some(({ item }) =>
           activeOnAirItem && (activeOnAirItem.itemID === item.itemID && activeOnAirItem.topic === item.topic && activeOnAirItem.head === item.head)
         );
+
+        const isCollapsed = block.collapsed && !hasOnAir;
+        blockGroup.className = `ctrl-block-group ${isCollapsed ? 'is-collapsed' : ''}`;
+        blockGroup.dataset.blockId = block.id;
 
         // Block Header
         const header = document.createElement('div');
@@ -609,20 +614,29 @@ export class ControllerView {
     const itemID = item.itemID || 'mainbar';
     let headDisplay = item.head || '';
     let topicDisplay = item.topic || '';
+    let assetsDisplay = '';
+
     if (itemID === 'logo') {
       headDisplay = item.head ? `${item.head} (Logo)` : 'Logo CG';
-      topicDisplay = `Logo: ${item.logo || '-'}`;
+      topicDisplay = `Logo Asset: ${item.logo || '-'}`;
+      assetsDisplay = `<span><strong>Logo:</strong> <code>${item.logo || '-'}</code></span>`;
     } else if (itemID === 'bar2line') {
       headDisplay = item.head ? `${item.head} (บาร์ 2 บรรทัด)` : 'บาร์ 2 บรรทัด';
-      topicDisplay = `L1: ${item.line1 || '-'} | L2: ${item.line2 || '-'}`;
+      topicDisplay = `[L1] ${item.line1 || '-'} | [L2] ${item.line2 || '-'}`;
+      assetsDisplay = `<span><strong>Main Bar:</strong> <code>${item.mainbar || '-'}</code></span> | <span><strong>Head Bar:</strong> <code>${item.headbar || 'none'}</code></span>`;
     } else if (itemID === 'bar2name') {
       headDisplay = item.head ? `${item.head} (บาร์พิธีกร 2 คน)` : 'บาร์พิธีกร 2 คน';
       topicDisplay = `พิธีกร: ${item.name1 || '-'} & ${item.name2 || '-'} (${item.line2 || '-'})`;
+      assetsDisplay = `<span><strong>Main Bar:</strong> <code>${item.mainbar || '-'}</code></span> | <span><strong>Head Bar:</strong> <code>${item.headbar || 'none'}</code></span>`;
+    } else {
+      headDisplay = item.head || '';
+      topicDisplay = item.topic || '(ไม่มีข้อความประเด็น)';
+      assetsDisplay = `<span><strong>Main Bar:</strong> <code>${item.mainbar || '-'}</code></span> | <span><strong>Head Bar:</strong> <code>${item.headbar || 'none'}</code></span>`;
     }
 
     el.innerHTML = `
       <div class="ctrl-playlist-item-left">
-        <div class="drag-handle" title="ลากเพื่อเปลี่ยนลำดับหรือย้ายบล็อก">
+        <div class="drag-handle" title="ลากเพื่อเปลี่ยนลำดับหรือย้ายบล็อก" style="cursor: grab; display: flex; align-items: center; color: var(--text-muted); padding: 4px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="9" cy="5" r="1.5"></circle><circle cx="15" cy="5" r="1.5"></circle>
             <circle cx="9" cy="12" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle>
@@ -630,23 +644,42 @@ export class ControllerView {
           </svg>
         </div>
         <span class="ctrl-item-index font-mono">#${idx + 1}</span>
+        <div>
+          <span class="badge badge-info">ID: ${item.itemID}</span>
+        </div>
         <div class="ctrl-item-content">
           ${headDisplay ? `<div class="ctrl-item-head">${headDisplay}</div>` : ''}
           <div class="ctrl-item-topic">${topicDisplay}</div>
+          <div class="item-row-assets fs-xs text-muted mt-1">
+            ${assetsDisplay}
+          </div>
         </div>
       </div>
       <div class="flex-center gap-2">
         <span class="badge ${isOnAir ? 'badge-success' : (isSelected ? 'badge-info' : 'badge-neutral')}">
           ${isOnAir ? '● ON-AIR' : (isSelected ? 'SELECTED' : 'IDLE')}
         </span>
+        <button class="btn btn-xs btn-play btn-item-play" title="สั่งเล่นประเด็นนี้ทันที">
+          ▶ PLAY
+        </button>
       </div>
     `;
 
     // Selection on click
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-item-play') || e.target.closest('.drag-handle')) return;
       this.selectedItemIndex = idx;
       this.renderPlaylist(items);
     });
+
+    const playBtn = el.querySelector('.btn-item-play');
+    if (playBtn) {
+      playBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        this.selectedItemIndex = idx;
+        await this.triggerPlay();
+      });
+    }
 
     // Drag and Drop Events
     el.addEventListener('dragstart', (e) => {
