@@ -330,6 +330,7 @@ export class EditorComponent {
     const mainbar = this.selectMainbar.value || './assets/bar/BAR.png';
     const headbar = this.selectHeadbar.value;
     const layer = this.inputLayer.value.trim() || '1';
+    const out = this.inputOut ? (this.inputOut.value.trim() || 'manual') : 'manual';
     const blockId = this.selectBlock ? (this.selectBlock.value || null) : null;
 
     let itemData = {
