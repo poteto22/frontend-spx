@@ -28,7 +28,23 @@ SPX Graphics Controller exposes a REST API at `/api/v1`. `CG-Front` communicates
 | **Update Item Data** | `/api/v1/item/update` | `POST` | `{ "project": "...", "rundown": "...", "itemID": "...", "data": {...} }` |
 | **Get Server Info** | `/api/v1/info` | `GET` | Returns version, uptime, and active profile |
 | **Get Rundown List** | `/api/v1/rundowns` | `GET` | List available rundowns in active project |
+| **Get All Rundowns** | `/api/v1/allrundowns` | `GET` | Returns all projects and their rundown lists `[{project, rundowns}]` |
+| **Get Layer State** | `/api/v1/getlayerstate` | `GET` | Returns current on-air/playout state of all graphic layers in RAM |
+| **Load Rundown** | `/api/v1/rundown/load?file` | `GET` | Query param: `file=ProjectName/RundownName` (loads rundown into memory) |
 | **Get Rundown Items** | `/api/v1/rundown/items` | `GET` | Query params: `project`, `rundown` |
+
+#### Endpoint Details for State & Rundown Synchronization:
+- **`GET /api/v1/allrundowns`**:
+  Returns the complete hierarchy of projects and their rundowns.
+  ```json
+  [
+    { "project": "Nation", "rundowns": ["MainRundown", "SpecialReport"] }
+  ]
+  ```
+- **`GET /api/v1/getlayerstate`**:
+  Returns the real-time on-air playout state of all graphic layers currently cached in RAM. Use this to sync UI ON-AIR indicators with CasparCG/Web layer actual states.
+- **`GET /api/v1/rundown/load?file=ProjectName/RundownName`** (or `/v1/rundown/load?file=...`):
+  Pre-loads a rundown into SPX memory (RAM) so its template items are immediately accessible and ready for playout.
 
 ---
 
