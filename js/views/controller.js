@@ -3,6 +3,7 @@
  */
 
 const STORAGE_KEY_SELECTED_LOGO = 'spx_selected_logo';
+const STORAGE_KEY_ACTIVE_ONAIR = 'spx_active_onair_item';
 
 export class ControllerView {
   constructor(container, api, store, editorDialog, showToast) {
@@ -22,13 +23,16 @@ export class ControllerView {
     this.syncTimer = null;
     this.render();
     this.subscribeStore();
-    this.initLogoStateSync();
+    this.initStateSync();
   }
 
   subscribeStore() {
     this.store.subscribe('items', () => this.renderPlaylist());
     this.store.subscribe('blocks', () => this.renderPlaylist());
-    this.store.subscribe('activeOnAirItem', () => this.renderPlaylist());
+    this.store.subscribe('activeOnAirItem', () => {
+      this.updateMainControlUI();
+      this.renderPlaylist();
+    });
     this.store.subscribe('config', (config) => this.populateLogoSelect(config));
   }
 
@@ -45,18 +49,18 @@ export class ControllerView {
               <span class="badge badge-info" id="ctrl-selected-id">Selected: Item #1</span>
             </div>
 
-            <!-- Active / Selected Topic Preview Banner -->
+            <!-- Active ON-AIR Topic Preview Banner (Displays ONLY the item currently on-air) -->
             <div class="ctrl-active-topic-banner" id="ctrl-active-topic-banner">
               <div class="ctrl-banner-header">
-                <span class="ctrl-banner-label" id="ctrl-banner-status-label">รายการที่เลือก (SELECTED):</span>
+                <span class="ctrl-banner-label" id="ctrl-banner-status-label">สถานะกราฟิก (STATUS):</span>
                 <span class="ctrl-banner-head" id="ctrl-banner-head-text"></span>
               </div>
-              <div class="ctrl-banner-topic" id="ctrl-banner-topic-text">-</div>
+              <div class="ctrl-banner-topic" id="ctrl-banner-topic-text">ไม่มีรายการกำลังออกอากาศ (OFF-AIR)</div>
             </div>
 
-            <!-- Big Playout Action Buttons -->
+            <!-- Big Playout Action Buttons (Combined Play/Stop & Next) -->
             <div class="big-control-buttons">
-              <button class="btn-control-big btn-control-play" id="btn-big-play">
+              <button class="btn-control-big btn-control-play" id="btn-big-play-toggle">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
@@ -69,13 +73,6 @@ export class ControllerView {
                   <line x1="19" y1="5" x2="19" y2="19"></line>
                 </svg>
                 <span>NEXT / STEP</span>
-              </button>
-
-              <button class="btn-control-big btn-control-stop" id="btn-big-stop">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <rect x="6" y="6" width="12" height="12"></rect>
-                </svg>
-                <span>STOP</span>
               </button>
             </div>
           </div>
@@ -134,10 +131,15 @@ export class ControllerView {
       </div>
     `;
 
-    // Bind Main Controls
-    document.getElementById('btn-big-play').addEventListener('click', () => this.triggerPlay());
-    document.getElementById('btn-big-next').addEventListener('click', () => this.triggerNext());
-    document.getElementById('btn-big-stop').addEventListener('click', () => this.triggerStop());
+    // Bind Main Playout Controls
+    const btnPlayToggle = document.getElementById('btn-big-play-toggle');
+    if (btnPlayToggle) {
+      btnPlayToggle.addEventListener('click', () => this.triggerTogglePlay());
+    }
+    const btnNext = document.getElementById('btn-big-next');
+    if (btnNext) {
+      btnNext.addEventListener('click', () => this.triggerNext());
+    }
 
     // Bind Logo Controls
     const btnToggleLogo = document.getElementById('btn-toggle-logo');
@@ -167,6 +169,7 @@ export class ControllerView {
 
     this.populateLogoSelect(config);
     this.updateLogoUI();
+    this.updateMainControlUI();
     this.renderPlaylist(items);
   }
 
@@ -210,7 +213,13 @@ export class ControllerView {
       }).catch(() => null);
 
       this.store.setState({ activeOnAirItem: item });
-      this.showToast(`▶ PLAY: ${item.head}`, 'success');
+      try {
+        localStorage.setItem(STORAGE_KEY_ACTIVE_ONAIR, JSON.stringify(item));
+      } catch (e) {}
+
+      this.updateMainControlUI();
+      this.renderPlaylist();
+      this.showToast(`▶ PLAY ON-AIR: ${item.head || item.topic}`, 'success');
     } catch (err) {
       this.showToast(`สั่งเล่นล้มเหลว: ${err.message}`, 'danger');
     }
@@ -278,43 +287,112 @@ export class ControllerView {
     });
   }
 
-  async syncLogoLayerState() {
+  findOnAirMainGraphic(layerData) {
+    if (!layerData) return null;
+    let templates = [];
+    if (Array.isArray(layerData.onairTemplates)) {
+      templates = layerData.onairTemplates;
+    } else if (Array.isArray(layerData)) {
+      templates = layerData;
+    } else if (typeof layerData === 'object') {
+      templates = Object.values(layerData).filter(item => item && typeof item === 'object');
+    }
+
+    return templates.find(t => {
+      const isLogo = t.itemID === 'logo' ||
+                     (typeof t.relpath === 'string' && t.relpath.toLowerCase().includes('logo'));
+      const isOnAir = t.onair === true || t.onair === 'true' || t.status === 'playing';
+      return !isLogo && isOnAir;
+    }) || null;
+  }
+
+  async syncPlayoutStates() {
     if (!this.api || typeof this.api.getLayerState !== 'function') return;
     try {
       const layerData = await this.api.getLayerState();
-      if (layerData) {
-        const onAir = this.checkIsLogoOnAir(layerData);
-        if (this.isLogoOnAir !== onAir) {
-          this.isLogoOnAir = onAir;
-          this.updateLogoUI();
+      if (!layerData) return;
+
+      // 1. Sync Logo Playout State
+      const isLogoPlaying = this.checkIsLogoOnAir(layerData);
+      if (this.isLogoOnAir !== isLogoPlaying) {
+        this.isLogoOnAir = isLogoPlaying;
+        this.updateLogoUI();
+      }
+
+      // 2. Sync Main Graphic Playout State with SPX
+      const onAirGraphic = this.findOnAirMainGraphic(layerData);
+      const currentActive = this.store.getState().activeOnAirItem;
+
+      if (onAirGraphic) {
+        // SPX reports a main graphic is ON-AIR
+        if (!currentActive) {
+          let restoredItem = null;
+          const savedStr = localStorage.getItem(STORAGE_KEY_ACTIVE_ONAIR);
+          if (savedStr) {
+            try { restoredItem = JSON.parse(savedStr); } catch (e) {}
+          }
+          if (!restoredItem) {
+            const items = this.store.getState().items || [];
+            restoredItem = items.find(it => it.itemID === onAirGraphic.itemID) || {
+              itemID: onAirGraphic.itemID || 'mainbar',
+              head: 'ON-AIR',
+              topic: onAirGraphic.description || 'กราฟิกกำลังออกอากาศ'
+            };
+          }
+          this.store.setState({ activeOnAirItem: restoredItem });
+        }
+      } else {
+        // SPX reports NO main graphic is ON-AIR
+        if (currentActive) {
+          this.store.setState({ activeOnAirItem: null });
+          localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
         }
       }
+
+      this.updateMainControlUI();
     } catch (err) {
       // SPX may be temporarily unreachable
     }
   }
 
-  initLogoStateSync() {
+  initStateSync() {
     // Initial sync
-    this.syncLogoLayerState();
+    this.syncPlayoutStates();
 
     // Periodic sync every 2.5s
     if (this.syncTimer) clearInterval(this.syncTimer);
-    this.syncTimer = setInterval(() => this.syncLogoLayerState(), 2500);
+    this.syncTimer = setInterval(() => this.syncPlayoutStates(), 2500);
 
     // Sync on activeView change
     this.store.subscribe('activeView', (view) => {
       if (view === 'view-controller') {
-        this.syncLogoLayerState();
+        this.syncPlayoutStates();
       }
     });
 
     // Sync when connection status becomes true
     this.store.subscribe('isConnected', (connected) => {
       if (connected) {
-        this.syncLogoLayerState();
+        this.syncPlayoutStates();
       }
     });
+  }
+
+  async triggerTogglePlay() {
+    const toggleBtn = document.getElementById('btn-big-play-toggle');
+    if (toggleBtn) toggleBtn.disabled = true;
+
+    try {
+      const activeItem = this.store.getState().activeOnAirItem;
+      if (activeItem) {
+        await this.triggerStop();
+      } else {
+        await this.triggerPlay();
+      }
+      await this.syncPlayoutStates();
+    } finally {
+      if (toggleBtn) toggleBtn.disabled = false;
+    }
   }
 
   async triggerToggleLogo() {
@@ -328,7 +406,7 @@ export class ControllerView {
         await this.triggerPlayLogo();
       }
       // Re-verify actual state from SPX
-      await this.syncLogoLayerState();
+      await this.syncPlayoutStates();
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -422,6 +500,69 @@ export class ControllerView {
     }
   }
 
+  updateMainControlUI() {
+    const activeItem = this.store.getState().activeOnAirItem;
+    const bannerBox = document.getElementById('ctrl-active-topic-banner');
+    const bannerStatusLabel = document.getElementById('ctrl-banner-status-label');
+    const bannerHeadText = document.getElementById('ctrl-banner-head-text');
+    const bannerTopicText = document.getElementById('ctrl-banner-topic-text');
+    const toggleBtn = document.getElementById('btn-big-play-toggle');
+
+    // 1. Top Banner: Exclusively shows what is ON-AIR (not the selected queue item)
+    if (bannerBox) {
+      if (activeItem) {
+        bannerBox.classList.add('is-onair');
+        if (bannerStatusLabel) bannerStatusLabel.textContent = '● กำลัง ON-AIR:';
+
+        const itemID = activeItem.itemID || 'mainbar';
+        let bannerHead = activeItem.head || '';
+        let bannerTopic = activeItem.topic || '';
+
+        if (itemID === 'logo') {
+          bannerHead = activeItem.head || 'LOGO CG';
+          bannerTopic = activeItem.logo ? `Logo: ${activeItem.logo.split('/').pop()}` : '-';
+        } else if (itemID === 'bar2line') {
+          bannerTopic = `${activeItem.line1 || ''} / ${activeItem.line2 || ''}`;
+        } else if (itemID === 'bar2name') {
+          bannerTopic = `${activeItem.name1 || ''} & ${activeItem.name2 || ''} (${activeItem.line2 || ''})`;
+        }
+
+        if (bannerHeadText) {
+          bannerHeadText.textContent = bannerHead ? `[${bannerHead}]` : '';
+        }
+        if (bannerTopicText) {
+          bannerTopicText.textContent = bannerTopic || '(ไม่มีข้อความประเด็น)';
+        }
+      } else {
+        bannerBox.classList.remove('is-onair');
+        if (bannerStatusLabel) bannerStatusLabel.textContent = 'สถานะกราฟิก (STATUS):';
+        if (bannerHeadText) bannerHeadText.textContent = '';
+        if (bannerTopicText) bannerTopicText.textContent = 'ไม่มีรายการกำลังออกอากาศ (OFF-AIR)';
+      }
+    }
+
+    // 2. Play / Stop Toggle Button
+    if (toggleBtn) {
+      if (activeItem) {
+        toggleBtn.className = 'btn-control-big btn-control-stop';
+        toggleBtn.innerHTML = `
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="6" y="6" width="12" height="12"></rect>
+          </svg>
+          <span>STOP ON-AIR</span>
+        `;
+      } else {
+        toggleBtn.className = 'btn-control-big btn-control-play';
+        toggleBtn.innerHTML = `
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>PLAY ON-AIR</span>
+        `;
+      }
+    }
+  }
+
   async triggerNext() {
     const activeItem = this.store.getState().activeOnAirItem;
     const itemID = activeItem ? activeItem.itemID : 'mainbar';
@@ -438,7 +579,12 @@ export class ControllerView {
     const itemID = activeItem ? activeItem.itemID : 'mainbar';
     try {
       await this.api.stopItem(itemID);
+      await this.api.directPlayout({ command: 'stop' }).catch(() => null);
       this.store.setState({ activeOnAirItem: null });
+      localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
+
+      this.updateMainControlUI();
+      this.renderPlaylist();
       this.showToast(`⏹ STOP: หยุดแสดงผลกราฟิก`, 'info');
     } catch (err) {
       this.showToast(`Stop ล้มเหลว: ${err.message}`, 'danger');
@@ -471,41 +617,8 @@ export class ControllerView {
       selectedBadge.textContent = selectedItem ? `Selected: #${this.selectedItemIndex + 1} (${selectedItem.itemID})` : 'None';
     }
 
-    // Update Top Banner with Selected / On-Air Topic
-    const bannerBox = document.getElementById('ctrl-active-topic-banner');
-    const bannerStatusLabel = document.getElementById('ctrl-banner-status-label');
-    const bannerHeadText = document.getElementById('ctrl-banner-head-text');
-    const bannerTopicText = document.getElementById('ctrl-banner-topic-text');
-
-    if (selectedItem && bannerTopicText) {
-      const itemID = selectedItem.itemID || 'mainbar';
-      let bannerHead = selectedItem.head || '';
-      let bannerTopic = selectedItem.topic || '';
-      if (itemID === 'logo') {
-        bannerHead = selectedItem.head || 'LOGO CG';
-        bannerTopic = selectedItem.logo ? `Logo: ${selectedItem.logo.split('/').pop()}` : '-';
-      } else if (itemID === 'bar2line') {
-        bannerTopic = `${selectedItem.line1 || ''} / ${selectedItem.line2 || ''}`;
-      } else if (itemID === 'bar2name') {
-        bannerTopic = `${selectedItem.name1 || ''} & ${selectedItem.name2 || ''} (${selectedItem.line2 || ''})`;
-      }
-
-      bannerTopicText.textContent = bannerTopic || '(ไม่มีข้อความประเด็น)';
-      if (bannerHeadText) {
-        bannerHeadText.textContent = bannerHead ? `[${bannerHead}]` : '';
-      }
-
-      const isCurrentOnAir = activeOnAirItem && (activeOnAirItem.itemID === selectedItem.itemID && activeOnAirItem.topic === selectedItem.topic && activeOnAirItem.head === selectedItem.head);
-      if (bannerBox) {
-        if (isCurrentOnAir) {
-          bannerBox.classList.add('is-onair');
-          if (bannerStatusLabel) bannerStatusLabel.textContent = '● กำลัง ON-AIR:';
-        } else {
-          bannerBox.classList.remove('is-onair');
-          if (bannerStatusLabel) bannerStatusLabel.textContent = 'รายการที่เลือก (SELECTED):';
-        }
-      }
-    }
+    // Update Top Banner and Playout controls strictly from ON-AIR state
+    this.updateMainControlUI();
 
     if (selectedItem && detailsContainer) {
       const itemID = selectedItem.itemID || 'mainbar';
