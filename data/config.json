@@ -17,6 +17,12 @@
       "value": "bar2name"
     }
   ],
+  "presetHeads": [
+    "ประเด็นร้อน",
+    "สถานการณ์เด่น",
+    "สัมภาษณ์ทางโทรศัพท์",
+    "สดจาก"
+  ],
   "mainbarOptions": [
     {
       "label": "BAR.png",
@@ -43,6 +49,40 @@
     {
       "label": "top-bar-yellow.png",
       "value": "./assets/head/top-bar-yellow.png"
+    }
+  ],
+  "logoOptions": [
+    {
+      "label": "LOGO คมชัดลึก 2026.png",
+      "value": "./assets/logo/LOGO คมชัดลึก 2026.png"
+    },
+    {
+      "label": "Nation Sports.png",
+      "value": "./assets/logo/Nation Sports.png"
+    },
+    {
+      "label": "NewsAlert.png",
+      "value": "./assets/logo/NewsAlert.png"
+    },
+    {
+      "label": "TuaThai_Morning.png",
+      "value": "./assets/logo/TuaThai_Morning.png"
+    },
+    {
+      "label": "TuaThai_Noon.png",
+      "value": "./assets/logo/TuaThai_Noon.png"
+    },
+    {
+      "label": "คมชัดลึก.png",
+      "value": "./assets/logo/คมชัดลึก.png"
+    },
+    {
+      "label": "เนชั่นวิเคราะห์.png",
+      "value": "./assets/logo/เนชั่นวิเคราะห์.png"
+    },
+    {
+      "label": "เนชั่นโฟกัส.png",
+      "value": "./assets/logo/เนชั่นโฟกัส.png"
     }
   ],
   "spxApiUrl": "http://localhost:5656/api/v1",
