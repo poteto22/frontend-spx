@@ -45,9 +45,14 @@ export class CreateRundownView {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             + สร้างรายการ CG ใหม่
           </button>
-          <button class="btn btn-secondary" id="btn-cr-save-spx">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            บันทึกไปยัง SPX Server
+          <button class="btn btn-danger" id="btn-cr-clear-rundown" title="ล้างรายการไอเทมและบล็อกข่าวทั้งหมดให้เป็น Rundown ว่าง">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            Clear Rundown
           </button>
           <button class="btn btn-outline" id="btn-cr-export">
             Export JSON
@@ -80,18 +85,21 @@ export class CreateRundownView {
       this.editorDialog.openForNew();
     });
 
-    document.getElementById('btn-cr-save-spx').addEventListener('click', async () => {
-      let { currentProject, currentRundownName, items, blocks } = this.store.getState();
-      try {
-        const payload = {
-          comment: 'Created in SPX Front-End Workspace',
-          blocks: blocks || [],
-          templates: items
-        };
-        await this.api.saveRundownJSON(currentProject || 'Nation', currentRundownName || 'MainRundown', payload);
-        this.showToast(`บันทึกไฟล์ Rundown "${currentRundownName}" ไปยัง SPX เรียบร้อยแล้ว`, 'success');
-      } catch (err) {
-        this.showToast(`บันทึกล้มเหลว: ${err.message}`, 'danger');
+    document.getElementById('btn-cr-clear-rundown').addEventListener('click', () => {
+      const { items = [], blocks = [] } = this.store.getState();
+      const totalCount = items.length;
+      const blockCount = blocks.length;
+
+      if (totalCount === 0 && blockCount === 0) {
+        this.showToast('Rundown ว่างเปล่าอยู่แล้ว ไม่มีรายการให้ล้าง', 'info');
+        return;
+      }
+
+      const confirmMsg = `⚠️ คำเตือน: คุณต้องการล้าง Rundown ทั้งหมดหรือไม่?\n\nการดำเนินการนี้จะลบรายการข่าวทั้งหมด (${totalCount} รายการ) และบล็อกข่าว (${blockCount} บล็อก) ให้กลายเป็น Rundown ว่างเปล่า\n\nยืนยันการล้างข้อมูลทั้งหมด?`;
+
+      if (confirm(confirmMsg)) {
+        this.store.setState({ items: [], blocks: [] });
+        this.showToast('ล้าง Rundown เรียบร้อยแล้ว (Rundown ว่างเปล่า)', 'warning');
       }
     });
 
