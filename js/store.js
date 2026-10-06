@@ -18,8 +18,12 @@ export class Store {
       autoSaveStatus: 'saved',
       
       activeView: 'view-main-rundown',
-      currentProject: 'Nation',
-      currentRundownName: 'MainRundown',
+      currentProject: (() => {
+        try { return localStorage.getItem('spx_current_project') || 'Nation'; } catch (e) { return 'Nation'; }
+      })(),
+      currentRundownName: (() => {
+        try { return localStorage.getItem('spx_current_rundown') || 'MainRundown'; } catch (e) { return 'MainRundown'; }
+      })(),
 
       config: (() => {
         const defaultCfg = {
@@ -168,6 +172,13 @@ export class Store {
 
     if (partialState.items || partialState.blocks) {
       this.triggerAutoSave();
+    }
+
+    if (partialState.currentProject) {
+      try { localStorage.setItem('spx_current_project', partialState.currentProject); } catch (e) {}
+    }
+    if (partialState.currentRundownName) {
+      try { localStorage.setItem('spx_current_rundown', partialState.currentRundownName); } catch (e) {}
     }
 
     Object.keys(partialState).forEach((key) => {

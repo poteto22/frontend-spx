@@ -951,5 +951,76 @@
   background: #dbeafe !important;
 }
 
+/* --------------------------------------------------------------------------
+   VIEW 5: ALL RUNDOWNS LIST
+   -------------------------------------------------------------------------- */
+.rundowns-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.rundown-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rundown-search-box svg {
+  position: absolute;
+  left: 0.65rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.rundown-search-box input {
+  padding-left: 2rem !important;
+  width: 250px;
+}
+
+.rundown-active-banner {
+  animation: fadeIn 0.3s ease;
+}
+
+.rundown-projects-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.rundown-project-card {
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.rundown-project-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.rundown-item-row {
+  transition: background var(--transition-fast);
+}
+
+.rundown-item-row:hover {
+  background: #f8fafc;
+}
+
+.rundown-item-row.is-active-rundown {
+  background: #f0fdf4;
+  border-left: 4px solid var(--accent-play);
+}
+
+.rundown-item-row:last-child {
+  border-bottom: none !important;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 
 

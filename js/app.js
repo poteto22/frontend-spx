@@ -8,6 +8,7 @@ import { MainRundownView } from './views/mainRundown.js';
 import { CreateRundownView } from './views/createRundown.js';
 import { ControllerView } from './views/controller.js';
 import { SettingsView } from './views/settings.js';
+import { RundownsView } from './views/rundowns.js';
 
 class App {
   constructor() {
@@ -113,11 +114,12 @@ class App {
     // Editor Dialog Component
     this.editorDialog = new EditorComponent(this.store, this.showToast);
 
-    // Instantiate 4 Screen Views
+    // Instantiate 5 Screen Views
     this.view1 = new MainRundownView(document.getElementById('view-main-rundown'), this.api, this.store, this.showToast);
     this.view2 = new CreateRundownView(document.getElementById('view-create-rundown'), this.api, this.store, this.editorDialog, this.showToast);
     this.view3 = new ControllerView(document.getElementById('view-controller'), this.api, this.store, this.editorDialog, this.showToast);
     this.view4 = new SettingsView(document.getElementById('view-settings'), this.api, this.store, this.showToast);
+    this.view5 = new RundownsView(document.getElementById('view-rundowns'), this.api, this.store, this.showToast);
 
     this.checkConnection();
   }
