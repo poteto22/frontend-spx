@@ -1,6 +1,9 @@
 /**
  * VIEW 3: Rundown Controller Desk (หน้าจอควบคุม Rundown)
  */
+
+const STORAGE_KEY_SELECTED_LOGO = 'spx_selected_logo';
+
 export class ControllerView {
   constructor(container, api, store, editorDialog, showToast) {
     this.container = container;
@@ -16,8 +19,10 @@ export class ControllerView {
     this.selectedItemIndex = 0;
 
     this.isLogoOnAir = false;
+    this.syncTimer = null;
     this.render();
     this.subscribeStore();
+    this.initLogoStateSync();
   }
 
   subscribeStore() {
@@ -116,14 +121,12 @@ export class ControllerView {
               </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-2">
-              <button class="btn btn-sm btn-play" id="btn-play-logo">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                PLAY LOGO
-              </button>
-              <button class="btn btn-sm btn-stop" id="btn-stop-logo">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12"></rect></svg>
-                STOP LOGO
+            <div>
+              <button class="btn btn-sm btn-play w-full flex-center gap-2" id="btn-toggle-logo" style="width: 100%; height: 38px; font-weight: 700;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span>PLAY LOGO</span>
               </button>
             </div>
           </div>
@@ -137,8 +140,19 @@ export class ControllerView {
     document.getElementById('btn-big-stop').addEventListener('click', () => this.triggerStop());
 
     // Bind Logo Controls
-    document.getElementById('btn-play-logo').addEventListener('click', () => this.triggerPlayLogo());
-    document.getElementById('btn-stop-logo').addEventListener('click', () => this.triggerStopLogo());
+    const btnToggleLogo = document.getElementById('btn-toggle-logo');
+    if (btnToggleLogo) {
+      btnToggleLogo.addEventListener('click', () => this.triggerToggleLogo());
+    }
+
+    const logoSelect = document.getElementById('ctrl-logo-select');
+    if (logoSelect) {
+      logoSelect.addEventListener('change', (e) => {
+        if (e.target.value) {
+          localStorage.setItem(STORAGE_KEY_SELECTED_LOGO, e.target.value);
+        }
+      });
+    }
 
     document.getElementById('btn-focus-first').addEventListener('click', () => this.selectIndex(0));
     document.getElementById('btn-focus-prev').addEventListener('click', () => this.selectIndex(Math.max(0, this.selectedItemIndex - 1)));
@@ -152,6 +166,7 @@ export class ControllerView {
     });
 
     this.populateLogoSelect(config);
+    this.updateLogoUI();
     this.renderPlaylist(items);
   }
 
@@ -204,7 +219,8 @@ export class ControllerView {
   populateLogoSelect(config) {
     const logoSelect = document.getElementById('ctrl-logo-select');
     if (!logoSelect) return;
-    const currentVal = logoSelect.value;
+    const savedVal = localStorage.getItem(STORAGE_KEY_SELECTED_LOGO);
+    const currentVal = logoSelect.value || savedVal;
     logoSelect.innerHTML = '';
 
     const options = (config && config.logoOptions && Array.isArray(config.logoOptions) && config.logoOptions.length > 0)
@@ -218,8 +234,90 @@ export class ControllerView {
       logoSelect.appendChild(opt);
     });
 
-    if (currentVal && Array.from(logoSelect.options).some(o => o.value === currentVal)) {
-      logoSelect.value = currentVal;
+    const targetVal = savedVal || currentVal;
+    if (targetVal && Array.from(logoSelect.options).some(o => o.value === targetVal)) {
+      logoSelect.value = targetVal;
+    } else if (logoSelect.options.length > 0) {
+      logoSelect.selectedIndex = 0;
+    }
+
+    if (logoSelect.value) {
+      localStorage.setItem(STORAGE_KEY_SELECTED_LOGO, logoSelect.value);
+    }
+  }
+
+  checkIsLogoOnAir(layerData) {
+    if (!layerData) return false;
+    let templates = [];
+    if (Array.isArray(layerData.onairTemplates)) {
+      templates = layerData.onairTemplates;
+    } else if (Array.isArray(layerData)) {
+      templates = layerData;
+    } else if (typeof layerData === 'object') {
+      templates = Object.values(layerData).filter(item => item && typeof item === 'object');
+    }
+
+    return templates.some(t => {
+      const isLogo = t.itemID === 'logo' ||
+                     (typeof t.relpath === 'string' && t.relpath.toLowerCase().includes('logo'));
+      const isOnAir = t.onair === true || t.onair === 'true' || t.status === 'playing';
+      return isLogo && isOnAir;
+    });
+  }
+
+  async syncLogoLayerState() {
+    if (!this.api || typeof this.api.getLayerState !== 'function') return;
+    try {
+      const layerData = await this.api.getLayerState();
+      if (layerData) {
+        const onAir = this.checkIsLogoOnAir(layerData);
+        if (this.isLogoOnAir !== onAir) {
+          this.isLogoOnAir = onAir;
+          this.updateLogoUI();
+        }
+      }
+    } catch (err) {
+      // SPX may be temporarily unreachable
+    }
+  }
+
+  initLogoStateSync() {
+    // Initial sync
+    this.syncLogoLayerState();
+
+    // Periodic sync every 2.5s
+    if (this.syncTimer) clearInterval(this.syncTimer);
+    this.syncTimer = setInterval(() => this.syncLogoLayerState(), 2500);
+
+    // Sync on activeView change
+    this.store.subscribe('activeView', (view) => {
+      if (view === 'view-controller') {
+        this.syncLogoLayerState();
+      }
+    });
+
+    // Sync when connection status becomes true
+    this.store.subscribe('isConnected', (connected) => {
+      if (connected) {
+        this.syncLogoLayerState();
+      }
+    });
+  }
+
+  async triggerToggleLogo() {
+    const btn = document.getElementById('btn-toggle-logo');
+    if (btn) btn.disabled = true;
+
+    try {
+      if (this.isLogoOnAir) {
+        await this.triggerStopLogo();
+      } else {
+        await this.triggerPlayLogo();
+      }
+      // Re-verify actual state from SPX
+      await this.syncLogoLayerState();
+    } finally {
+      if (btn) btn.disabled = false;
     }
   }
 
@@ -230,6 +328,9 @@ export class ControllerView {
       this.showToast('กรุณาเลือกไฟล์ Logo ก่อนสั่งเล่น', 'warning');
       return;
     }
+
+    // Persist choice immediately
+    localStorage.setItem(STORAGE_KEY_SELECTED_LOGO, selectedLogo);
 
     const logoItem = {
       itemID: 'logo',
@@ -275,14 +376,36 @@ export class ControllerView {
 
   updateLogoUI() {
     const logoPill = document.getElementById('ctrl-logo-status-pill');
-    if (!logoPill) return;
+    const toggleBtn = document.getElementById('btn-toggle-logo');
 
-    if (this.isLogoOnAir) {
-      logoPill.className = 'badge badge-success';
-      logoPill.textContent = '● ON-AIR';
-    } else {
-      logoPill.className = 'badge badge-neutral';
-      logoPill.textContent = 'OFF-AIR';
+    if (logoPill) {
+      if (this.isLogoOnAir) {
+        logoPill.className = 'badge badge-success';
+        logoPill.textContent = '● ON-AIR';
+      } else {
+        logoPill.className = 'badge badge-neutral';
+        logoPill.textContent = 'OFF-AIR';
+      }
+    }
+
+    if (toggleBtn) {
+      if (this.isLogoOnAir) {
+        toggleBtn.className = 'btn btn-sm btn-stop w-full flex-center gap-2';
+        toggleBtn.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="6" y="6" width="12" height="12"></rect>
+          </svg>
+          <span>STOP LOGO</span>
+        `;
+      } else {
+        toggleBtn.className = 'btn btn-sm btn-play w-full flex-center gap-2';
+        toggleBtn.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>PLAY LOGO</span>
+        `;
+      }
     }
   }
 
