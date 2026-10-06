@@ -8,9 +8,12 @@ export class CreateRundownView {
     this.store = store;
     this.editorDialog = editorDialog;
     this.showToast = showToast;
+    this.pendingDeleteBlockId = null;
+    this.pendingDeleteBlockTitle = '';
 
     this.render();
     this.subscribeStore();
+    this.initDeleteBlockDialog();
   }
 
   subscribeStore() {
@@ -258,10 +261,7 @@ export class CreateRundownView {
       });
       headerEl.querySelector('.btn-block-del').addEventListener('click', (e) => {
         e.stopPropagation();
-        if (confirm(`คุณต้องการลบบล็อกข่าว "${block.title}" หรือไม่?\n(ประเด็นข้างในจะถูกนำออกมาเป็นรายการทั่วไป)`)) {
-          this.store.deleteBlock(block.id, false);
-          this.showToast(`ลบบล็อกข่าว "${block.title}" แล้ว`, 'info');
-        }
+        this.openDeleteBlockDialog(block);
       });
 
       // Block Drag & Drop (Reordering Blocks)
@@ -541,5 +541,90 @@ export class CreateRundownView {
     });
 
     return row;
+  }
+
+  initDeleteBlockDialog() {
+    this.deleteDialog = document.getElementById('delete-block-dialog');
+    if (!this.deleteDialog) return;
+
+    const btnClose = document.getElementById('btn-close-delete-block-dialog');
+    const btnCancel = document.getElementById('btn-cancel-delete-block');
+    const btnConfirm = document.getElementById('btn-confirm-delete-block');
+
+    if (btnClose) {
+      btnClose.addEventListener('click', () => this.deleteDialog.close());
+    }
+    if (btnCancel) {
+      btnCancel.addEventListener('click', () => this.deleteDialog.close());
+    }
+    if (btnConfirm) {
+      btnConfirm.addEventListener('click', () => {
+        if (!this.pendingDeleteBlockId) return;
+
+        const selectedMode = this.deleteDialog.querySelector('input[name="del-block-mode"]:checked')?.value || 'move';
+        const deleteItemsInside = (selectedMode === 'deleteAll');
+
+        const items = this.store.getState().items || [];
+        const count = items.filter(it => it.blockId === this.pendingDeleteBlockId).length;
+
+        this.store.deleteBlock(this.pendingDeleteBlockId, deleteItemsInside);
+
+        if (deleteItemsInside) {
+          this.showToast(`ลบบล็อกข่าว "${this.pendingDeleteBlockTitle}" และรายการภายในทั้งหมด (${count} รายการ) แล้ว`, 'warning');
+        } else {
+          this.showToast(`ลบบล็อกข่าว "${this.pendingDeleteBlockTitle}" แล้ว (ย้าย ${count} รายการไปเป็นรายการทั่วไป)`, 'info');
+        }
+
+        this.pendingDeleteBlockId = null;
+        this.pendingDeleteBlockTitle = '';
+        this.deleteDialog.close();
+      });
+    }
+
+    this.deleteDialog.addEventListener('click', (e) => {
+      const rect = this.deleteDialog.getBoundingClientRect();
+      const isInDialog = (
+        rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+      );
+      if (!isInDialog) {
+        this.deleteDialog.close();
+      }
+    });
+  }
+
+  openDeleteBlockDialog(block) {
+    if (!block) return;
+    this.pendingDeleteBlockId = block.id;
+    this.pendingDeleteBlockTitle = block.title;
+
+    const dialog = this.deleteDialog || document.getElementById('delete-block-dialog');
+    if (!dialog) return;
+
+    const items = this.store.getState().items || [];
+    const itemsInBlock = items.filter(it => it.blockId === block.id);
+
+    const titleText = document.getElementById('del-block-title-text');
+    const countText = document.getElementById('del-block-count-text');
+    const choicesBox = document.getElementById('del-block-choices-box');
+
+    if (titleText) titleText.textContent = `📁 ${block.title}`;
+    if (countText) {
+      countText.textContent = itemsInBlock.length > 0
+        ? `มีรายการข่าวอยู่ภายในทั้งหมด ${itemsInBlock.length} รายการ`
+        : `บล็อกนี้ไม่มีรายการข่าวอยู่ภายใน`;
+    }
+
+    if (choicesBox) {
+      if (itemsInBlock.length === 0) {
+        choicesBox.classList.add('hidden');
+      } else {
+        choicesBox.classList.remove('hidden');
+        const radioMove = dialog.querySelector('input[name="del-block-mode"][value="move"]');
+        if (radioMove) radioMove.checked = true;
+      }
+    }
+
+    dialog.showModal();
   }
 }

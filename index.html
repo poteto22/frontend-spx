@@ -292,6 +292,76 @@
       </div>
     </dialog>
 
+    <!-- DELETE BLOCK CONFIRMATION MODAL DIALOG -->
+    <dialog class="modal-dialog" id="delete-block-dialog">
+      <div class="modal-content" style="max-width: 520px;">
+        <div class="modal-header">
+          <div class="flex-center gap-2">
+            <div class="stat-icon" style="width: 32px; height: 32px; background: #fee2e2; color: #dc2626; border-radius: 6px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </div>
+            <h3 class="fs-md fw-700 m-0">ยืนยันการลบบล็อกข่าว</h3>
+          </div>
+          <button type="button" class="btn-icon" id="btn-close-delete-block-dialog">&times;</button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <span class="fs-xs fw-600 text-muted uppercase">บล็อกข่าวที่ต้องการลบ:</span>
+            <div class="fs-md fw-700 text-primary mt-1" id="del-block-title-text">-</div>
+            <div class="fs-xs text-muted mt-1" id="del-block-count-text">มีรายการข่าวอยู่ภายใน 0 รายการ</div>
+          </div>
+
+          <div class="p-3 bg-slate-50 border rounded-md mb-4" id="del-block-choices-box">
+            <p class="fs-sm fw-600 mb-2">กรุณาเลือกรูปแบบที่ต้องการจัดการรายการข่าวภายในบล็อกนี้:</p>
+            
+            <div class="flex-column gap-2">
+              <!-- Choice 1: Move to General Items -->
+              <label class="del-block-choice-card">
+                <input type="radio" name="del-block-mode" value="move" checked>
+                <div class="del-block-choice-info">
+                  <div class="fw-700 fs-sm text-primary flex-center gap-1" style="justify-content: flex-start;">
+                    <span>📌 ย้ายไปเป็น "รายการทั่วไป" (เก็บรายการไว้)</span>
+                  </div>
+                  <div class="fs-xs text-muted mt-1">
+                    ลบเฉพาะหัวข้อบล็อกข่าวออก ส่วนรายการข่าวทั้งหมดจะถูกย้ายออกไปอยู่นอกบล็อก (รายการทั่วไป) เพื่อนำไปใช้งานต่อได้
+                  </div>
+                </div>
+              </label>
+
+              <!-- Choice 2: Delete All Items -->
+              <label class="del-block-choice-card danger">
+                <input type="radio" name="del-block-mode" value="deleteAll">
+                <div class="del-block-choice-info">
+                  <div class="fw-700 fs-sm text-danger flex-center gap-1" style="justify-content: flex-start;">
+                    <span>🗑️ ลบข่าวภายในบล็อกทั้งหมด</span>
+                  </div>
+                  <div class="fs-xs text-muted mt-1">
+                    ลบทั้งบล็อกข่าวและรายการข่าวทั้งหมดที่อยู่ข้างในทิ้งทันที
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex-between gap-2 mt-4">
+            <button type="button" class="btn btn-secondary" id="btn-cancel-delete-block">
+              ยกเลิก
+            </button>
+            <button type="button" class="btn btn-danger flex-center gap-1" id="btn-confirm-delete-block">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>ยืนยันการลบ</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
     <!-- TOAST NOTIFICATION STACK -->
     <div class="toast-container" id="toast-container"></div>
   </div>
