@@ -21,30 +21,42 @@ export class Store {
       currentProject: 'Nation',
       currentRundownName: 'MainRundown',
 
-      config: {
-        itemTypes: [
-          { label: "Logo บาร์ (logo)", value: "logo" },
-          { label: "บาร์ประเด็น (mainbar)", value: "mainbar" },
-          { label: "บาร์ 2 บรรทัด (bar2line)", value: "bar2line" },
-          { label: "บาร์พิธีกร 2 คน (bar2name)", value: "bar2name" }
-        ],
-        presetHeads: [
-          "ประเด็นร้อน",
-          "สถานการณ์เด่น",
-          "สัมภาษณ์ทางโทรศัพท์"
-        ],
-        mainbarOptions: [
-          { label: "MAIN BAR.png", value: "./assets/bar/MAIN BAR.png" }
-        ],
-        headbarOptions: [
-          { label: "none (ไม่เลือก)", value: "" },
-          { label: "top-bar-1.png", value: "./assets/head/top-bar-1.png" },
-          { label: "top-bar-2.png", value: "./assets/head/top-bar-2.png" },
-          { label: "top-bar-3.png", value: "./assets/head/top-bar-3.png" },
-          { label: "top-bar-4.png", value: "./assets/head/top-bar-4.png" }
-        ],
-        logoOptions: []
-      },
+      config: (() => {
+        const defaultCfg = {
+          itemTypes: [
+            { label: "Logo บาร์ (logo)", value: "logo" },
+            { label: "บาร์ประเด็น (mainbar)", value: "mainbar" },
+            { label: "บาร์ 2 บรรทัด (bar2line)", value: "bar2line" },
+            { label: "บาร์พิธีกร 2 คน (bar2name)", value: "bar2name" }
+          ],
+          presetHeads: [
+            "ประเด็นร้อน",
+            "สถานการณ์เด่น",
+            "สัมภาษณ์ทางโทรศัพท์"
+          ],
+          mainbarOptions: [
+            { label: "MAIN BAR.png", value: "./assets/bar/MAIN BAR.png" }
+          ],
+          headbarOptions: [
+            { label: "none (ไม่เลือก)", value: "" },
+            { label: "top-bar-1.png", value: "./assets/head/top-bar-1.png" },
+            { label: "top-bar-2.png", value: "./assets/head/top-bar-2.png" },
+            { label: "top-bar-3.png", value: "./assets/head/top-bar-3.png" },
+            { label: "top-bar-4.png", value: "./assets/head/top-bar-4.png" }
+          ],
+          logoOptions: []
+        };
+        try {
+          const cached = localStorage.getItem('spx_cached_config');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed && typeof parsed === 'object') {
+              return { ...defaultCfg, ...parsed };
+            }
+          }
+        } catch (e) {}
+        return defaultCfg;
+      })(),
       
       blocks: [],
       items: [],
@@ -70,6 +82,9 @@ export class Store {
       const res = await fetch('/api/config');
       if (res.ok) {
         const config = await res.json();
+        try {
+          localStorage.setItem('spx_cached_config', JSON.stringify(config));
+        } catch (e) {}
         this.setState({ config });
         return config;
       }

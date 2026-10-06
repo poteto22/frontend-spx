@@ -220,12 +220,19 @@ export class ControllerView {
     const logoSelect = document.getElementById('ctrl-logo-select');
     if (!logoSelect) return;
     const savedVal = localStorage.getItem(STORAGE_KEY_SELECTED_LOGO);
-    const currentVal = logoSelect.value || savedVal;
-    logoSelect.innerHTML = '';
 
-    const options = (config && config.logoOptions && Array.isArray(config.logoOptions) && config.logoOptions.length > 0)
+    let options = (config && config.logoOptions && Array.isArray(config.logoOptions) && config.logoOptions.length > 0)
       ? config.logoOptions
-      : [{ label: 'LOGO คมชัดลึก 2026.png', value: './assets/logo/LOGO คมชัดลึก 2026.png' }];
+      : [];
+
+    if (options.length === 0) {
+      const storeConfig = this.store.getState().config;
+      if (storeConfig && storeConfig.logoOptions && storeConfig.logoOptions.length > 0) {
+        options = storeConfig.logoOptions;
+      }
+    }
+
+    logoSelect.innerHTML = '';
 
     options.forEach(optData => {
       const opt = document.createElement('option');
@@ -234,14 +241,20 @@ export class ControllerView {
       logoSelect.appendChild(opt);
     });
 
-    const targetVal = savedVal || currentVal;
-    if (targetVal && Array.from(logoSelect.options).some(o => o.value === targetVal)) {
-      logoSelect.value = targetVal;
+    if (savedVal) {
+      const hasSavedOption = Array.from(logoSelect.options).some(o => o.value === savedVal);
+      if (hasSavedOption) {
+        logoSelect.value = savedVal;
+      } else if (options.length === 0) {
+        // Options haven't loaded yet from server, keep placeholder so selection is preserved
+        const tempOpt = document.createElement('option');
+        tempOpt.value = savedVal;
+        tempOpt.textContent = savedVal.split('/').pop();
+        tempOpt.selected = true;
+        logoSelect.appendChild(tempOpt);
+      }
     } else if (logoSelect.options.length > 0) {
       logoSelect.selectedIndex = 0;
-    }
-
-    if (logoSelect.value) {
       localStorage.setItem(STORAGE_KEY_SELECTED_LOGO, logoSelect.value);
     }
   }
