@@ -20,6 +20,8 @@ export class ControllerView {
     this.selectedItemIndex = 0;
 
     this.isLogoOnAir = false;
+    this.stopCooldownUntil = 0;
+    this.logoStopCooldownUntil = 0;
     this.syncTimer = null;
     this.render();
     this.subscribeStore();
@@ -29,7 +31,23 @@ export class ControllerView {
   subscribeStore() {
     this.store.subscribe('items', () => this.renderPlaylist());
     this.store.subscribe('blocks', () => this.renderPlaylist());
-    this.store.subscribe('activeOnAirItem', () => {
+    this.store.subscribe('activeOnAirItem', (item) => {
+      if (!item) {
+        this.stopCooldownUntil = Date.now() + 4000;
+        try {
+          localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
+        } catch (e) {}
+      } else {
+        this.stopCooldownUntil = 0;
+      }
+      this.updateMainControlUI();
+      this.renderPlaylist();
+    });
+    this.store.subscribe('stopAllTriggeredAt', () => {
+      this.stopCooldownUntil = Date.now() + 4000;
+      this.logoStopCooldownUntil = Date.now() + 4000;
+      this.isLogoOnAir = false;
+      this.updateLogoUI();
       this.updateMainControlUI();
       this.renderPlaylist();
     });
@@ -188,6 +206,7 @@ export class ControllerView {
   }
 
   async triggerPlay() {
+    this.stopCooldownUntil = 0;
     const items = this.store.getState().items;
     if (items.length === 0) return;
     const item = items[this.selectedItemIndex] || items[0];
@@ -312,44 +331,72 @@ export class ControllerView {
       const layerData = await this.api.getLayerState();
       if (!layerData) return;
 
+      const now = Date.now();
+      const isLogoStopping = now < this.logoStopCooldownUntil;
+      const isMainStopping = now < this.stopCooldownUntil;
+
       // 1. Sync Logo Playout State
       const isLogoPlaying = this.checkIsLogoOnAir(layerData);
-      if (this.isLogoOnAir !== isLogoPlaying) {
-        this.isLogoOnAir = isLogoPlaying;
-        this.updateLogoUI();
+      if (isLogoStopping) {
+        if (!isLogoPlaying) {
+          this.logoStopCooldownUntil = 0;
+        }
+        if (this.isLogoOnAir) {
+          this.isLogoOnAir = false;
+          this.updateLogoUI();
+        }
+      } else {
+        if (this.isLogoOnAir !== isLogoPlaying) {
+          this.isLogoOnAir = isLogoPlaying;
+          this.updateLogoUI();
+        }
       }
 
       // 2. Sync Main Graphic Playout State with SPX
       const onAirGraphic = this.findOnAirMainGraphic(layerData);
       const currentActive = this.store.getState().activeOnAirItem;
 
-      if (onAirGraphic) {
-        // SPX reports a main graphic is ON-AIR
-        if (!currentActive) {
-          let restoredItem = null;
-          const savedStr = localStorage.getItem(STORAGE_KEY_ACTIVE_ONAIR);
-          if (savedStr) {
-            try { restoredItem = JSON.parse(savedStr); } catch (e) {}
-          }
-          if (!restoredItem) {
-            const items = this.store.getState().items || [];
-            restoredItem = items.find(it => it.itemID === onAirGraphic.itemID) || {
-              itemID: onAirGraphic.itemID || 'mainbar',
-              head: 'ON-AIR',
-              topic: onAirGraphic.description || 'กราฟิกกำลังออกอากาศ'
-            };
-          }
-          this.store.setState({ activeOnAirItem: restoredItem });
+      if (isMainStopping) {
+        if (!onAirGraphic) {
+          this.stopCooldownUntil = 0;
         }
-      } else {
-        // SPX reports NO main graphic is ON-AIR
         if (currentActive) {
           this.store.setState({ activeOnAirItem: null });
-          localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
+          try {
+            localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
+          } catch (e) {}
+          this.updateMainControlUI();
         }
+      } else {
+        if (onAirGraphic) {
+          // SPX reports a main graphic is ON-AIR
+          if (!currentActive) {
+            let restoredItem = null;
+            const savedStr = localStorage.getItem(STORAGE_KEY_ACTIVE_ONAIR);
+            if (savedStr) {
+              try { restoredItem = JSON.parse(savedStr); } catch (e) {}
+            }
+            if (!restoredItem) {
+              const items = this.store.getState().items || [];
+              restoredItem = items.find(it => it.itemID === onAirGraphic.itemID) || {
+                itemID: onAirGraphic.itemID || 'mainbar',
+                head: 'ON-AIR',
+                topic: onAirGraphic.description || 'กราฟิกกำลังออกอากาศ'
+              };
+            }
+            this.store.setState({ activeOnAirItem: restoredItem });
+          }
+        } else {
+          // SPX reports NO main graphic is ON-AIR
+          if (currentActive) {
+            this.store.setState({ activeOnAirItem: null });
+            try {
+              localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
+            } catch (e) {}
+          }
+        }
+        this.updateMainControlUI();
       }
-
-      this.updateMainControlUI();
     } catch (err) {
       // SPX may be temporarily unreachable
     }
@@ -413,6 +460,7 @@ export class ControllerView {
   }
 
   async triggerPlayLogo() {
+    this.logoStopCooldownUntil = 0;
     const logoSelect = document.getElementById('ctrl-logo-select');
     const selectedLogo = logoSelect ? logoSelect.value : '';
     if (!selectedLogo) {
@@ -451,14 +499,16 @@ export class ControllerView {
   }
 
   async triggerStopLogo() {
+    this.logoStopCooldownUntil = Date.now() + 4000;
+    this.isLogoOnAir = false;
+    this.updateLogoUI();
+
     try {
       await this.api.stopItem('logo');
       await this.api.directPlayout({
         command: 'stop'
       }).catch(() => null);
 
-      this.isLogoOnAir = false;
-      this.updateLogoUI();
       this.showToast(`⏹ STOP LOGO: หยุดแสดงผล Logo`, 'info');
     } catch (err) {
       this.showToast(`Stop Logo ล้มเหลว: ${err.message}`, 'danger');
@@ -575,16 +625,21 @@ export class ControllerView {
   }
 
   async triggerStop() {
+    this.stopCooldownUntil = Date.now() + 4000;
     const activeItem = this.store.getState().activeOnAirItem;
     const itemID = activeItem ? activeItem.itemID : 'mainbar';
+
+    this.store.setState({ activeOnAirItem: null });
+    try {
+      localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
+    } catch (e) {}
+
+    this.updateMainControlUI();
+    this.renderPlaylist();
+
     try {
       await this.api.stopItem(itemID);
       await this.api.directPlayout({ command: 'stop' }).catch(() => null);
-      this.store.setState({ activeOnAirItem: null });
-      localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
-
-      this.updateMainControlUI();
-      this.renderPlaylist();
       this.showToast(`⏹ STOP: หยุดแสดงผลกราฟิก`, 'info');
     } catch (err) {
       this.showToast(`Stop ล้มเหลว: ${err.message}`, 'danger');

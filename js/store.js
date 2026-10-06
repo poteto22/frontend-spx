@@ -148,6 +148,20 @@ export class Store {
     return this.state;
   }
 
+  stopAllGraphics() {
+    try {
+      localStorage.removeItem('spx_active_onair_item');
+    } catch (e) {}
+    this.setState({
+      activeOnAirItem: null,
+      stopAllTriggeredAt: Date.now()
+    });
+  }
+
+  clearAllPlaying() {
+    this.stopAllGraphics();
+  }
+
   setState(partialState) {
     const prevState = { ...this.state };
     this.state = { ...this.state, ...partialState };

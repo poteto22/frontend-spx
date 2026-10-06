@@ -81,9 +81,9 @@ export class HeaderComponent {
     // Emergency Panic
     this.btnPanic.addEventListener('click', async () => {
       if (confirm('🚨 EMERGENCY PANIC!\n\nAre you sure you want to clear ALL graphic layers immediately without out-animations?')) {
+        this.store.stopAllGraphics();
         try {
           const res = await this.api.panic();
-          this.store.clearAllPlaying();
           this.showToast(res.info || 'Panic executed. All layers cleared!', 'warning');
         } catch (err) {
           this.showToast(`Panic action failed: ${err.message}`, 'danger');
@@ -93,9 +93,9 @@ export class HeaderComponent {
 
     // Stop All Layers
     this.btnStopAll.addEventListener('click', async () => {
+      this.store.stopAllGraphics();
       try {
         await this.api.stopAllLayers();
-        this.store.clearAllPlaying();
         this.showToast('Stopping all graphic layers smoothly.', 'info');
       } catch (err) {
         this.showToast(`Stop All failed: ${err.message}`, 'danger');

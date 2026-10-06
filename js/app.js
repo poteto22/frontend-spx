@@ -90,9 +90,9 @@ class App {
     // Emergency Controls
     this.btnPanic.addEventListener('click', async () => {
       if (confirm('🚨 EMERGENCY PANIC!\n\nคุณต้องการล้างกราฟิกบนหน้าจอทั้งหมดทันทีหรือไม่?')) {
+        this.store.stopAllGraphics();
         try {
           await this.api.panic();
-          this.store.setState({ activeOnAirItem: null });
           this.showToast('PANIC: ล้างกราฟิกบนหน้าจอเรียบร้อยแล้ว', 'warning');
         } catch (err) {
           this.showToast(`Panic ล้มเหลว: ${err.message}`, 'danger');
@@ -101,9 +101,9 @@ class App {
     });
 
     this.btnStopAll.addEventListener('click', async () => {
+      this.store.stopAllGraphics();
       try {
         await this.api.stopAllLayers();
-        this.store.setState({ activeOnAirItem: null });
         this.showToast('Stop All: สั่งหยุดแสดงผลกราฟิกแบบนุ่มนวล', 'info');
       } catch (err) {
         this.showToast(`Stop All ล้มเหลว: ${err.message}`, 'danger');
