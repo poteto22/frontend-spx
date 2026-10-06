@@ -18,11 +18,10 @@ export class Store {
       autoSaveStatus: 'saved',
       
       activeView: 'view-main-rundown',
-      currentProject: (() => {
-        try { return localStorage.getItem('spx_current_project') || 'Nation'; } catch (e) { return 'Nation'; }
-      })(),
-      currentRundownName: (() => {
-        try { return localStorage.getItem('spx_current_rundown') || 'MainRundown'; } catch (e) { return 'MainRundown'; }
+      currentProject: 'Nation',
+      currentRundownName: 'MainRundown',
+      spxLoadedRundown: (() => {
+        try { return localStorage.getItem('spx_loaded_rundown') || ''; } catch (e) { return ''; }
       })(),
 
       config: (() => {
@@ -174,11 +173,8 @@ export class Store {
       this.triggerAutoSave();
     }
 
-    if (partialState.currentProject) {
-      try { localStorage.setItem('spx_current_project', partialState.currentProject); } catch (e) {}
-    }
-    if (partialState.currentRundownName) {
-      try { localStorage.setItem('spx_current_rundown', partialState.currentRundownName); } catch (e) {}
+    if (partialState.spxLoadedRundown !== undefined) {
+      try { localStorage.setItem('spx_loaded_rundown', partialState.spxLoadedRundown || ''); } catch (e) {}
     }
 
     Object.keys(partialState).forEach((key) => {

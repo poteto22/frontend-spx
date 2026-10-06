@@ -2,10 +2,13 @@
  * VIEW 5: SPX All Rundowns List (หน้าจอแสดงรายการ Rundown ทั้งหมด)
  * ดึงข้อมูลจาก SPX REST API /api/v1/allrundowns
  * มีปุ่ม Load เพื่อสั่ง SPX โหลด rundown ด้วย API /api/v1/rundown/load?file=project/rundown
+ * 
+ * ข้อตกลงสำคัญ:
+ * - การโหลดในหน้านี้เป็นการสั่ง SPX Controller โหลดไฟล์เข้า RAM ของ SPX เท่านั้น
+ * - แยกอิสระจากรายการ CG Rundown ที่สร้างไว้ในเว็บแอป (ห้ามดึง items มาทับ rundown ที่ผู้ใช้สร้างไว้เด็ดขาด)
  */
 
-const STORAGE_KEY_CURRENT_PROJECT = 'spx_current_project';
-const STORAGE_KEY_CURRENT_RUNDOWN = 'spx_current_rundown';
+const STORAGE_KEY_LOADED_RUNDOWN = 'spx_loaded_rundown';
 
 export class RundownsView {
   constructor(container, api, store, showToast) {
@@ -17,7 +20,7 @@ export class RundownsView {
     this.projectsData = [];
     this.isLoading = false;
     this.searchTerm = '';
-    this.loadingRundownKey = null; // 'project/rundown' currently being loaded
+    this.loadingRundownKey = null; // 'project/rundown' currently being loaded in SPX
 
     this.render();
     this.subscribeStore();
@@ -25,8 +28,7 @@ export class RundownsView {
   }
 
   subscribeStore() {
-    this.store.subscribe('currentProject', () => this.renderList());
-    this.store.subscribe('currentRundownName', () => this.renderList());
+    this.store.subscribe('spxLoadedRundown', () => this.renderList());
     this.store.subscribe('isConnected', (connected) => {
       if (connected && this.projectsData.length === 0) {
         this.fetchAllRundowns();
@@ -55,7 +57,7 @@ export class RundownsView {
                 <h3 class="fs-lg fw-700 m-0">รายการ Rundown ในระบบ SPX (All Rundowns)</h3>
               </div>
               <p class="text-muted fs-xs m-0">
-                ดึงข้อมูลจาก SPX REST API <code>/api/v1/allrundowns</code> พร้อมปุ่มสั่งโหลดเข้าหน่วยความจำ SPX ด้วย <code>/v1/rundown/load?file=...</code>
+                ดึงข้อมูลจาก SPX REST API <code>/api/v1/allrundowns</code> เพื่อสั่งให้ SPX Controller โหลด rundown เข้าสู่หน่วยความจำด้วย <code>/v1/rundown/load?file=...</code> (ไม่กระทบรายการ CG ที่สร้างไว้ในเว็บแอป)
               </p>
             </div>
 
@@ -113,30 +115,21 @@ export class RundownsView {
     const banner = document.getElementById('rundown-active-banner');
     if (!banner) return;
 
-    const { currentProject = 'Nation', currentRundownName = 'MainRundown' } = this.store.getState();
+    const { spxLoadedRundown = '' } = this.store.getState();
+    const isLoaded = Boolean(spxLoadedRundown);
 
     banner.innerHTML = `
       <div class="flex-between flex-wrap gap-2 p-2 bg-slate-50 border rounded-md">
         <div class="flex-center gap-2">
-          <span class="badge badge-success">● ACTIVE</span>
-          <span class="fs-xs fw-600 text-muted">Rundown ปัจจุบันในระบบ:</span>
-          <span class="fs-sm fw-700 font-mono text-primary">${currentProject} / ${currentRundownName}</span>
+          <span class="badge ${isLoaded ? 'badge-success' : 'badge-neutral'}">${isLoaded ? '● LOADED IN SPX' : 'OFF-AIR'}</span>
+          <span class="fs-xs fw-600 text-muted">Rundown ที่โหลดใน SPX Controller:</span>
+          <span class="fs-sm fw-700 font-mono text-primary">${isLoaded ? spxLoadedRundown : '(ยังไม่มีการโหลด)'}</span>
         </div>
-        <div class="flex-center gap-2">
-          <button class="btn btn-xs btn-outline" id="btn-goto-controller-from-rd">
-            ▶ ไปที่หน้าจอควบคุม Rundown
-          </button>
+        <div class="fs-xs text-muted">
+          * การโหลดในหน้านี้เป็นการสั่ง SPX Controller โดยตรง โดยแยกอิสระจากรายการ CG Rundown ที่สร้างไว้
         </div>
       </div>
     `;
-
-    const btnGoto = document.getElementById('btn-goto-controller-from-rd');
-    if (btnGoto) {
-      btnGoto.addEventListener('click', () => {
-        const ctrlNavBtn = document.querySelector('.nav-screen-btn[data-view="view-controller"]');
-        if (ctrlNavBtn) ctrlNavBtn.click();
-      });
-    }
   }
 
   async fetchAllRundowns(showToastOnManual = false) {
@@ -205,7 +198,7 @@ export class RundownsView {
     const content = document.getElementById('rundowns-list-content');
     if (!content) return;
 
-    const { currentProject = 'Nation', currentRundownName = 'MainRundown' } = this.store.getState();
+    const { spxLoadedRundown = '' } = this.store.getState();
 
     if (!this.projectsData || this.projectsData.length === 0) {
       content.innerHTML = `
@@ -282,13 +275,13 @@ export class RundownsView {
         rundowns.forEach(rd => {
           const rdName = typeof rd === 'string' ? rd : (rd.name || rd.file || 'Unnamed');
           const fileIdentifier = `${projName}/${rdName}`;
-          const isActive = (projName === currentProject && rdName === currentRundownName);
+          const isLoaded = (fileIdentifier === spxLoadedRundown);
           const isCurrentlyLoading = (this.loadingRundownKey === fileIdentifier);
 
           html += `
-            <div class="rundown-item-row flex-between p-3 border-b ${isActive ? 'is-active-rundown' : ''}">
+            <div class="rundown-item-row flex-between p-3 border-b ${isLoaded ? 'is-active-rundown' : ''}">
               <div class="flex-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${isActive ? 'var(--accent-play)' : '#64748b'}" stroke-width="2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${isLoaded ? 'var(--accent-play)' : '#64748b'}" stroke-width="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                   <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -296,22 +289,22 @@ export class RundownsView {
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
                 <div>
-                  <div class="fw-700 fs-sm ${isActive ? 'text-success' : 'text-primary'}">${rdName}</div>
+                  <div class="fw-700 fs-sm ${isLoaded ? 'text-success' : 'text-primary'}">${rdName}</div>
                   <div class="fs-xs font-mono text-muted">${fileIdentifier}</div>
                 </div>
               </div>
 
               <div class="flex-center gap-2">
-                ${isActive ? `
+                ${isLoaded ? `
                   <span class="badge badge-success flex-center gap-1">
-                    ● ACTIVE
+                    ● LOADED IN SPX
                   </span>
                 ` : `
                   <span class="badge badge-neutral">Ready</span>
                 `}
 
                 <button 
-                  class="btn btn-sm ${isActive ? 'btn-outline' : 'btn-primary'} btn-load-rundown flex-center gap-1" 
+                  class="btn btn-sm ${isLoaded ? 'btn-outline' : 'btn-primary'} btn-load-rundown flex-center gap-1" 
                   data-project="${projName}" 
                   data-rundown="${rdName}"
                   data-file="${fileIdentifier}"
@@ -319,14 +312,14 @@ export class RundownsView {
                 >
                   ${isCurrentlyLoading ? `
                     <div class="spinner" style="display:inline-block; width:12px; height:12px; border:2px solid #ffffff; border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-                    <span>กำลังโหลด...</span>
+                    <span>กำลังส่งคำสั่ง...</span>
                   ` : `
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7 10 12 15 17 10"></polyline>
                       <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    <span>${isActive ? 'Reload' : 'Load เข้า SPX'}</span>
+                    <span>${isLoaded ? 'Reload ใน SPX' : 'Load เข้า SPX'}</span>
                   `}
                 </button>
               </div>
@@ -362,61 +355,21 @@ export class RundownsView {
 
     try {
       // 1. Call SPX API /api/v1/rundown/load?file=Project/Rundown
-      const res = await this.api.loadRundown(file);
+      await this.api.loadRundown(file);
 
-      // 2. Persist in localStorage and update store
+      // 2. Persist loaded rundown state in localStorage and Store
       try {
-        localStorage.setItem(STORAGE_KEY_CURRENT_PROJECT, project);
-        localStorage.setItem(STORAGE_KEY_CURRENT_RUNDOWN, rundown);
+        localStorage.setItem(STORAGE_KEY_LOADED_RUNDOWN, file);
       } catch (e) {}
 
       this.store.setState({
-        currentProject: project,
-        currentRundownName: rundown
+        spxLoadedRundown: file
       });
 
-      // 3. Try to sync rundown items into CG-Front store
-      try {
-        const rundownData = await this.api.getRundownJSON(project, rundown);
-        if (rundownData && Array.isArray(rundownData.templates)) {
-          const templates = rundownData.templates;
-          const blocks = [];
-          const items = [];
-
-          // Group or map templates into items & blocks
-          const blockMap = new Map();
-          templates.forEach((tpl, idx) => {
-            const bId = tpl.blockId || `block-1`;
-            if (!blockMap.has(bId)) {
-              blockMap.set(bId, {
-                id: bId,
-                title: tpl.blockTitle || `บล็อกข่าวที่ ${blockMap.size + 1}`,
-                collapsed: false
-              });
-            }
-            items.push({
-              ...tpl,
-              blockId: bId,
-              itemID: tpl.itemID || 'mainbar'
-            });
-          });
-
-          const extractedBlocks = Array.from(blockMap.values());
-          if (items.length > 0) {
-            this.store.setState({
-              items,
-              blocks: extractedBlocks.length > 0 ? extractedBlocks : [{ id: 'block-1', title: 'ข่าวหลัก', collapsed: false }]
-            });
-          }
-        }
-      } catch (syncErr) {
-        console.warn('Could not sync rundown items to CG-Front:', syncErr.message);
-      }
-
-      this.showToast(`✅ โหลด Rundown "${file}" เข้าสู่ SPX สำเร็จ!`, 'success');
+      this.showToast(`✅ สั่ง SPX โหลด Rundown "${file}" เรียบร้อยแล้ว`, 'success');
     } catch (err) {
-      console.error('Failed to load rundown:', err);
-      this.showToast(`โหลด Rundown "${file}" ล้มเหลว: ${err.message}`, 'danger');
+      console.error('Failed to load rundown in SPX:', err);
+      this.showToast(`สั่ง SPX โหลด Rundown "${file}" ล้มเหลว: ${err.message}`, 'danger');
     } finally {
       this.loadingRundownKey = null;
       this.renderList();
