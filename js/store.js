@@ -119,23 +119,20 @@ export class Store {
         const data = await res.json();
         if (Array.isArray(data)) {
           if (data.length > 0) {
-            // Check if any items have blockId, if not, create initial block
-            const blocks = this.state.blocks && this.state.blocks.length > 0
-              ? this.state.blocks
-              : [{ id: 'block-1', title: 'ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ', collapsed: false }];
-            const items = data.map(it => ({ ...it, blockId: it.blockId || 'block-1' }));
+            const blocks = Array.isArray(this.state.blocks) ? this.state.blocks : [];
+            const items = data.map(it => ({
+              ...it,
+              blockId: (it.blockId && blocks.some(b => b.id === it.blockId)) ? it.blockId : null
+            }));
             this.setState({ items, blocks });
           } else {
             this.setState({ items: [], blocks: [] });
           }
         } else if (data && data.items) {
-          let blocks = data.blocks || [];
-          if (blocks.length === 0 && data.items.length > 0) {
-            blocks = [{ id: 'block-1', title: 'ข่าวที่ 1: สถานการณ์น้ำท่วมและภัยพิบัติ', collapsed: false }];
-          }
+          const blocks = Array.isArray(data.blocks) ? data.blocks : [];
           const items = (data.items || []).map(it => ({
             ...it,
-            blockId: it.blockId || (blocks[0] ? blocks[0].id : null)
+            blockId: (it.blockId && blocks.some(b => b.id === it.blockId)) ? it.blockId : null
           }));
           this.setState({ items, blocks });
         } else {
