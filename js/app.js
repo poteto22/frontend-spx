@@ -21,6 +21,7 @@ class App {
     this.initScreenNavigation();
     this.initComponents();
     this.subscribeAutoSaveUI();
+    this.subscribeRundownUI();
     this.startPollingLoop();
   }
 
@@ -104,8 +105,12 @@ class App {
     this.btnStopAll.addEventListener('click', async () => {
       this.store.stopAllGraphics();
       try {
-        await this.api.stopAllLayers();
-        this.showToast('Stop All: สั่งหยุดแสดงผลกราฟิกแบบนุ่มนวล', 'info');
+        const state = this.store.getState();
+        const items = state.items || [];
+        const additionalIDs = items.map(it => it.itemID).filter(Boolean);
+        const rundownFile = state.spxLoadedRundown || (state.config && state.config.spxRundownFile) || 'Inside_Thailand/Live';
+        await this.api.stopAllLayers(rundownFile, additionalIDs);
+        this.showToast('⏹ STOP ALL: สั่งหยุดแสดงผลกราฟิกทั้งหมดเรียบร้อยแล้ว', 'info');
       } catch (err) {
         this.showToast(`Stop All ล้มเหลว: ${err.message}`, 'danger');
       }
@@ -142,6 +147,30 @@ class App {
         this.autoSaveText.textContent = 'Save Failed';
       }
     });
+  }
+
+  subscribeRundownUI() {
+    this.rundownNameEl = document.getElementById('header-rundown-name');
+    this.rundownPill = document.getElementById('header-rundown-pill');
+
+    const updateRundownBadge = () => {
+      if (!this.rundownNameEl) return;
+      const state = this.store.getState();
+      const currentRundown = state.spxLoadedRundown || (state.config && state.config.spxRundownFile) || 'Inside_Thailand/Live';
+      this.rundownNameEl.textContent = currentRundown;
+    };
+
+    this.store.subscribe('spxLoadedRundown', updateRundownBadge);
+    this.store.subscribe('config', updateRundownBadge);
+    updateRundownBadge();
+
+    if (this.rundownPill) {
+      this.rundownPill.addEventListener('click', () => {
+        // Switch to Screen 5: All Rundowns
+        const screenBtn = document.querySelector('.nav-screen-btn[data-view="view-rundowns"]');
+        if (screenBtn) screenBtn.click();
+      });
+    }
   }
 
   async checkConnection() {

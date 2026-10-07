@@ -95,8 +95,12 @@ export class HeaderComponent {
     this.btnStopAll.addEventListener('click', async () => {
       this.store.stopAllGraphics();
       try {
-        await this.api.stopAllLayers();
-        this.showToast('Stopping all graphic layers smoothly.', 'info');
+        const state = this.store.getState();
+        const items = state.items || [];
+        const additionalIDs = items.map(it => it.itemID).filter(Boolean);
+        const rundownFile = state.spxLoadedRundown || (state.config && state.config.spxRundownFile) || 'Inside_Thailand/Live';
+        await this.api.stopAllLayers(rundownFile, additionalIDs);
+        this.showToast('⏹ STOP ALL: สั่งหยุดแสดงผลกราฟิกทั้งหมดเรียบร้อยแล้ว', 'info');
       } catch (err) {
         this.showToast(`Stop All failed: ${err.message}`, 'danger');
       }

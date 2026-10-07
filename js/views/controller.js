@@ -19,7 +19,9 @@ export class ControllerView {
     }
     this.selectedItemIndex = 0;
 
-    this.isLogoOnAir = false;
+    this.isLogoOnAir = (() => {
+      try { return localStorage.getItem('spx_logo_onair') === 'true'; } catch (e) { return false; }
+    })();
     this.stopCooldownUntil = 0;
     this.logoStopCooldownUntil = 0;
     this.syncTimer = null;
@@ -47,10 +49,12 @@ export class ControllerView {
       this.stopCooldownUntil = Date.now() + 4000;
       this.logoStopCooldownUntil = Date.now() + 4000;
       this.isLogoOnAir = false;
+      try { localStorage.setItem('spx_logo_onair', 'false'); } catch (e) {}
       this.updateLogoUI();
       this.updateMainControlUI();
       this.renderPlaylist();
     });
+    this.store.subscribe('spxLoadedRundown', () => this.updateMainControlUI());
     this.store.subscribe('config', (config) => this.populateLogoSelect(config));
   }
 
@@ -63,7 +67,10 @@ export class ControllerView {
         <div class="main-controller-panel">
           <div class="card p-3 ctrl-desk-card">
             <div class="flex-between mb-2">
-              <span class="fs-xs fw-700 text-muted uppercase">แผงควบคุมการออกอากาศหลัก (Main Broadcast Control Desk)</span>
+              <div class="flex-center gap-2">
+                <span class="fs-xs fw-700 text-muted uppercase">แผงควบคุมการออกอากาศหลัก (Main Broadcast Control Desk)</span>
+                <span class="badge badge-primary font-mono fs-xs" id="ctrl-rundown-badge">Rundown: Inside_Thailand/Live</span>
+              </div>
               <span class="badge badge-info" id="ctrl-selected-id">Selected: Item #1</span>
             </div>
 
@@ -231,9 +238,10 @@ export class ControllerView {
         ]
       }).catch(() => null);
 
-      this.store.setState({ activeOnAirItem: item });
+      const activeItemData = { ...item, _currentStep: 1 };
+      this.store.setState({ activeOnAirItem: activeItemData });
       try {
-        localStorage.setItem(STORAGE_KEY_ACTIVE_ONAIR, JSON.stringify(item));
+        localStorage.setItem(STORAGE_KEY_ACTIVE_ONAIR, JSON.stringify(activeItemData));
       } catch (e) {}
 
       this.updateMainControlUI();
@@ -336,18 +344,18 @@ export class ControllerView {
       const isMainStopping = now < this.stopCooldownUntil;
 
       // 1. Sync Logo Playout State
+      // Note: As documented by SPX, /api/v1/getlayerstate returns web-playout layer memory
+      // and returns onairTemplates: [] for items controlled via API (controlRundownItemByID).
+      // Therefore, never clear this.isLogoOnAir when getlayerstate returns empty templates.
       const isLogoPlaying = this.checkIsLogoOnAir(layerData);
       if (isLogoStopping) {
         if (!isLogoPlaying) {
           this.logoStopCooldownUntil = 0;
         }
-        if (this.isLogoOnAir) {
-          this.isLogoOnAir = false;
-          this.updateLogoUI();
-        }
-      } else {
-        if (this.isLogoOnAir !== isLogoPlaying) {
-          this.isLogoOnAir = isLogoPlaying;
+      } else if (isLogoPlaying) {
+        if (!this.isLogoOnAir) {
+          this.isLogoOnAir = true;
+          try { localStorage.setItem('spx_logo_onair', 'true'); } catch (e) {}
           this.updateLogoUI();
         }
       }
@@ -360,42 +368,25 @@ export class ControllerView {
         if (!onAirGraphic) {
           this.stopCooldownUntil = 0;
         }
-        if (currentActive) {
-          this.store.setState({ activeOnAirItem: null });
-          try {
-            localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
-          } catch (e) {}
+      } else if (onAirGraphic) {
+        // Only adopt when SPX explicitly reports an active graphic layer
+        if (!currentActive) {
+          let restoredItem = null;
+          const savedStr = localStorage.getItem(STORAGE_KEY_ACTIVE_ONAIR);
+          if (savedStr) {
+            try { restoredItem = JSON.parse(savedStr); } catch (e) {}
+          }
+          if (!restoredItem) {
+            const items = this.store.getState().items || [];
+            restoredItem = items.find(it => it.itemID === onAirGraphic.itemID) || {
+              itemID: onAirGraphic.itemID || 'mainbar',
+              head: 'ON-AIR',
+              topic: onAirGraphic.description || 'กราฟิกกำลังออกอากาศ'
+            };
+          }
+          this.store.setState({ activeOnAirItem: restoredItem });
           this.updateMainControlUI();
         }
-      } else {
-        if (onAirGraphic) {
-          // SPX reports a main graphic is ON-AIR
-          if (!currentActive) {
-            let restoredItem = null;
-            const savedStr = localStorage.getItem(STORAGE_KEY_ACTIVE_ONAIR);
-            if (savedStr) {
-              try { restoredItem = JSON.parse(savedStr); } catch (e) {}
-            }
-            if (!restoredItem) {
-              const items = this.store.getState().items || [];
-              restoredItem = items.find(it => it.itemID === onAirGraphic.itemID) || {
-                itemID: onAirGraphic.itemID || 'mainbar',
-                head: 'ON-AIR',
-                topic: onAirGraphic.description || 'กราฟิกกำลังออกอากาศ'
-              };
-            }
-            this.store.setState({ activeOnAirItem: restoredItem });
-          }
-        } else {
-          // SPX reports NO main graphic is ON-AIR
-          if (currentActive) {
-            this.store.setState({ activeOnAirItem: null });
-            try {
-              localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
-            } catch (e) {}
-          }
-        }
-        this.updateMainControlUI();
       }
     } catch (err) {
       // SPX may be temporarily unreachable
@@ -436,7 +427,6 @@ export class ControllerView {
       } else {
         await this.triggerPlay();
       }
-      await this.syncPlayoutStates();
     } finally {
       if (toggleBtn) toggleBtn.disabled = false;
     }
@@ -452,8 +442,6 @@ export class ControllerView {
       } else {
         await this.triggerPlayLogo();
       }
-      // Re-verify actual state from SPX
-      await this.syncPlayoutStates();
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -491,6 +479,7 @@ export class ControllerView {
       }).catch(() => null);
 
       this.isLogoOnAir = true;
+      try { localStorage.setItem('spx_logo_onair', 'true'); } catch (e) {}
       this.updateLogoUI();
       this.showToast(`▶ PLAY LOGO: ${selectedLogo.split('/').pop()}`, 'success');
     } catch (err) {
@@ -501,6 +490,7 @@ export class ControllerView {
   async triggerStopLogo() {
     this.logoStopCooldownUntil = Date.now() + 4000;
     this.isLogoOnAir = false;
+    try { localStorage.setItem('spx_logo_onair', 'false'); } catch (e) {}
     this.updateLogoUI();
 
     try {
@@ -557,6 +547,13 @@ export class ControllerView {
     const bannerHeadText = document.getElementById('ctrl-banner-head-text');
     const bannerTopicText = document.getElementById('ctrl-banner-topic-text');
     const toggleBtn = document.getElementById('btn-big-play-toggle');
+    const rundownBadge = document.getElementById('ctrl-rundown-badge');
+
+    if (rundownBadge) {
+      const state = this.store.getState();
+      const currentRundown = state.spxLoadedRundown || (state.config && state.config.spxRundownFile) || 'Inside_Thailand/Live';
+      rundownBadge.textContent = `Rundown: ${currentRundown}`;
+    }
 
     // 1. Top Banner: Exclusively shows what is ON-AIR (not the selected queue item)
     if (bannerBox) {
@@ -615,10 +612,36 @@ export class ControllerView {
 
   async triggerNext() {
     const activeItem = this.store.getState().activeOnAirItem;
-    const itemID = activeItem ? activeItem.itemID : 'mainbar';
+    if (!activeItem) {
+      this.showToast('ไม่มีรายการกำลังออกอากาศ (OFF-AIR)', 'warning');
+      return;
+    }
+
+    const itemID = activeItem.itemID || 'mainbar';
+    const totalSteps = parseInt(activeItem.steps || 1, 10);
+    const currentStep = activeItem._currentStep || 1;
+
     try {
       await this.api.continueItem(itemID);
-      this.showToast(`⏭ STEP / NEXT ส่งสำเร็จ`, 'warning');
+
+      if (currentStep >= totalSteps) {
+        // CG finished its final step and animated OUT (CG ลงเรียบร้อยแล้ว)
+        this.stopCooldownUntil = Date.now() + 4000;
+        this.store.setState({ activeOnAirItem: null });
+        try {
+          localStorage.removeItem(STORAGE_KEY_ACTIVE_ONAIR);
+        } catch (e) {}
+        this.updateMainControlUI();
+        this.renderPlaylist();
+        this.showToast(`⏭ STEP / NEXT: นำกราฟิกลงจากหน้าจอเรียบร้อยแล้ว`, 'info');
+      } else {
+        const updatedItem = { ...activeItem, _currentStep: currentStep + 1 };
+        this.store.setState({ activeOnAirItem: updatedItem });
+        try {
+          localStorage.setItem(STORAGE_KEY_ACTIVE_ONAIR, JSON.stringify(updatedItem));
+        } catch (e) {}
+        this.showToast(`⏭ STEP / NEXT (${currentStep + 1}/${totalSteps}) ส่งสำเร็จ`, 'warning');
+      }
     } catch (err) {
       this.showToast(`Next ล้มเหลว: ${err.message}`, 'danger');
     }

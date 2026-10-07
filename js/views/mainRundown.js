@@ -17,6 +17,8 @@ export class MainRundownView {
     this.store.subscribe('blocks', () => this.updateOverview());
     this.store.subscribe('activeOnAirItem', () => this.updateOverview());
     this.store.subscribe('currentRundownName', () => this.updateOverview());
+    this.store.subscribe('spxLoadedRundown', () => this.updateOverview());
+    this.store.subscribe('config', () => this.updateOverview());
   }
 
   render() {
@@ -116,7 +118,7 @@ export class MainRundownView {
   }
 
   updateOverview() {
-    const { items, blocks, activeOnAirItem, currentRundownName } = this.store.getState();
+    const { items, blocks, activeOnAirItem, currentRundownName, spxLoadedRundown, config } = this.store.getState();
 
     const totalEl = document.getElementById('stat-total-items');
     const totalBlocksEl = document.getElementById('stat-total-blocks');
@@ -128,7 +130,8 @@ export class MainRundownView {
 
     if (totalEl) totalEl.textContent = (items || []).length.toString();
     if (totalBlocksEl) totalBlocksEl.textContent = (blocks || []).length.toString();
-    if (rundownNameEl) rundownNameEl.textContent = currentRundownName || 'MainRundown';
+    const activeFile = spxLoadedRundown || (config && config.spxRundownFile) || currentRundownName || 'Inside_Thailand/Live';
+    if (rundownNameEl) rundownNameEl.textContent = activeFile;
 
     if (activeOnAirItem) {
       if (onairStatusEl) {

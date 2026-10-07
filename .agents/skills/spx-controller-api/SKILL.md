@@ -22,6 +22,7 @@ SPX Graphics Controller exposes a REST API at `/api/v1`. `CG-Front` communicates
 
 | Action | Endpoint | Method | Key Params / Body |
 | :--- | :--- | :--- | :--- |
+| **Control Rundown Item** | `/api/v1/controlRundownItemByID` | `GET` | Query params: `file=Project/Rundown`, `item=itemID`, `command=play\|stop\|continue` |
 | **Play Item** | `/api/v1/item/play` | `POST` | `{ "project": "...", "rundown": "...", "itemID": "..." }` |
 | **Stop Item** | `/api/v1/item/stop` | `POST` | `{ "project": "...", "rundown": "...", "itemID": "..." }` |
 | **Continue / Next** | `/api/v1/item/continue` | `POST` | `{ "project": "...", "rundown": "...", "itemID": "..." }` |

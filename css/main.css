@@ -230,6 +230,54 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.75rem;
 }
 
+/* Active Rundown Indicator Pill in Top Header */
+.rundown-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.32rem 0.75rem;
+  border-radius: var(--radius-full);
+  background: #eff6ff;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  color: #1d4ed8;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.rundown-status-pill:hover {
+  background: #dbeafe;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
+}
+
+.rundown-status-pill .rundown-icon {
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+}
+
+.rundown-status-pill .rundown-title-label {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.rundown-status-pill .rundown-file-badge {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  color: #1e40af;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.12rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  letter-spacing: -0.01em;
+}
+
 /* Auto-Save Status Pill */
 .autosave-status-pill {
   display: flex;

@@ -324,7 +324,13 @@ export class RundownComponent {
           } else {
             await this.api.continueItem();
           }
-          this.showToast(`NEXT: ${item.description}`, 'warning');
+
+          const activeItem = this.store.getState().activeOnAirItem;
+          if (activeItem && activeItem.itemID === item.itemID) {
+            this.store.setState({ activeOnAirItem: null });
+            try { localStorage.removeItem('spx_active_onair_item'); } catch (e) {}
+          }
+          this.showToast(`NEXT: ${item.description || item.head || item.itemID}`, 'warning');
         } catch (err) {
           this.showToast(`Next failed: ${err.message}`, 'danger');
         }

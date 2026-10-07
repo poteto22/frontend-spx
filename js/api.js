@@ -2,9 +2,20 @@
  * SPX Graphics Controller - REST API v1 Client & JSON Data Provider
  */
 export class SPXClient {
-  constructor(baseUrl = 'http://localhost:5656/api/v1', apiKey = '') {
+  constructor(baseUrl = 'http://localhost:5656/api/v1', apiKey = '', defaultRundownFile = 'Inside_Thailand/Live') {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
     this.apiKey = apiKey;
+    this.defaultRundownFile = defaultRundownFile || 'Inside_Thailand/Live';
+  }
+
+  setDefaultRundownFile(file) {
+    if (file) {
+      this.defaultRundownFile = file;
+    }
+  }
+
+  getDefaultRundownFile() {
+    return this.defaultRundownFile || 'Inside_Thailand/Live';
   }
 
   setBaseUrl(url) {
@@ -97,17 +108,47 @@ export class SPXClient {
     return this._request('/panic');
   }
 
-  // Item Playout Controls
-  async playItem(id = 'mainbar') {
-    return this._request(id ? `/item/play/${id}` : '/item/play');
+  // Control Rundown Item by ID using SPX REST API v1
+  // Endpoint: /api/v1/controlRundownItemByID?file=Project/Rundown&item=itemID&command=play|stop|continue
+  async controlRundownItemByID(file, item, command = 'play') {
+    const targetFile = file || this.getDefaultRundownFile();
+    const query = new URLSearchParams({
+      file: targetFile,
+      item: item || 'mainbar',
+      command: command
+    });
+    return this._request(`/controlRundownItemByID?${query.toString()}`);
   }
 
-  async continueItem(id = 'mainbar') {
-    return this._request(id ? `/item/continue/${id}` : '/item/continue');
+  // Item Playout Controls - Uses controlRundownItemByID with fallback to legacy /item/play/:id
+  async playItem(id = 'mainbar', file = null) {
+    const targetFile = file || this.getDefaultRundownFile();
+    try {
+      return await this.controlRundownItemByID(targetFile, id, 'play');
+    } catch (err) {
+      console.warn(`controlRundownItemByID failed, falling back to /item/play/${id}:`, err.message);
+      return this._request(id ? `/item/play/${id}` : '/item/play');
+    }
   }
 
-  async stopItem(id = 'mainbar') {
-    return this._request(id ? `/item/stop/${id}` : '/item/stop');
+  async continueItem(id = 'mainbar', file = null) {
+    const targetFile = file || this.getDefaultRundownFile();
+    try {
+      return await this.controlRundownItemByID(targetFile, id, 'continue');
+    } catch (err) {
+      console.warn(`controlRundownItemByID failed, falling back to /item/continue/${id}:`, err.message);
+      return this._request(id ? `/item/continue/${id}` : '/item/continue');
+    }
+  }
+
+  async stopItem(id = 'mainbar', file = null) {
+    const targetFile = file || this.getDefaultRundownFile();
+    try {
+      return await this.controlRundownItemByID(targetFile, id, 'stop');
+    } catch (err) {
+      console.warn(`controlRundownItemByID failed, falling back to /item/stop/${id}:`, err.message);
+      return this._request(id ? `/item/stop/${id}` : '/item/stop');
+    }
   }
 
   // Focus Navigation Controls
@@ -130,8 +171,27 @@ export class SPXClient {
     return this._request(`/rundown/load?file=${encodeURIComponent(projectRundownFile)}`);
   }
 
-  async stopAllLayers() {
-    return this._request('/rundown/stopAllLayers');
+  async stopAllLayers(file = null, additionalItemIDs = []) {
+    const targetFile = file || this.getDefaultRundownFile();
+    
+    // Stop all known rundown items in the active rundown
+    const idsToStop = new Set(['logo', 'mainbar', 'bar2line', 'bar2name', ...additionalItemIDs]);
+
+    const stopPromises = Array.from(idsToStop).map(id => 
+      this.controlRundownItemByID(targetFile, id, 'stop').catch(err => {
+        console.warn(`stopAllLayers: failed to stop item ${id}:`, err.message);
+        return null;
+      })
+    );
+
+    // Also send directPlayout stop
+    const directStop = this.directPlayout({ command: 'stop' }).catch(() => null);
+
+    // Also send /rundown/stopAllLayers to sync SPX controller UI
+    const legacyStop = this._request('/rundown/stopAllLayers').catch(() => null);
+
+    await Promise.allSettled([...stopPromises, directStop, legacyStop]);
+    return { status: 200, message: 'All layers stopped' };
   }
 
   // Data Listing API

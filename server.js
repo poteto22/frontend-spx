@@ -51,6 +51,7 @@ function getConfig() {
     headbarOptions: [],
     logoOptions: [],
     spxApiUrl: "http://localhost:5656/api/v1",
+    spxRundownFile: "Inside_Thailand/Live",
     endpointUrl: "http://localhost:8080/mainbar"
   };
 
@@ -62,6 +63,7 @@ function getConfig() {
         if (parsed.itemTypes && Array.isArray(parsed.itemTypes)) defaultConfig.itemTypes = parsed.itemTypes;
         if (parsed.presetHeads && Array.isArray(parsed.presetHeads)) defaultConfig.presetHeads = parsed.presetHeads;
         if (parsed.spxApiUrl) defaultConfig.spxApiUrl = parsed.spxApiUrl;
+        if (parsed.spxRundownFile) defaultConfig.spxRundownFile = parsed.spxRundownFile;
         if (parsed.endpointUrl) defaultConfig.endpointUrl = parsed.endpointUrl;
       }
     } catch (e) {

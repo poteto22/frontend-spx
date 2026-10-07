@@ -21,7 +21,7 @@ export class Store {
       currentProject: 'Nation',
       currentRundownName: 'MainRundown',
       spxLoadedRundown: (() => {
-        try { return localStorage.getItem('spx_loaded_rundown') || ''; } catch (e) { return ''; }
+        try { return localStorage.getItem('spx_loaded_rundown') || 'Inside_Thailand/Live'; } catch (e) { return 'Inside_Thailand/Live'; }
       })(),
 
       config: (() => {
@@ -47,7 +47,8 @@ export class Store {
             { label: "top-bar-3.png", value: "./assets/head/top-bar-3.png" },
             { label: "top-bar-4.png", value: "./assets/head/top-bar-4.png" }
           ],
-          logoOptions: []
+          logoOptions: [],
+          spxRundownFile: 'Inside_Thailand/Live'
         };
         try {
           const cached = localStorage.getItem('spx_cached_config');
@@ -64,7 +65,12 @@ export class Store {
       blocks: [],
       items: [],
 
-      activeOnAirItem: null,
+      activeOnAirItem: (() => {
+        try {
+          const saved = localStorage.getItem('spx_active_onair_item');
+          return saved ? JSON.parse(saved) : null;
+        } catch (e) { return null; }
+      })(),
       layerStates: {}
     };
 
@@ -73,6 +79,15 @@ export class Store {
 
   setApiClient(api) {
     this.api = api;
+    const initialRundown = this.state.spxLoadedRundown || (this.state.config && this.state.config.spxRundownFile) || 'Inside_Thailand/Live';
+    if (this.api && this.api.setDefaultRundownFile) {
+      this.api.setDefaultRundownFile(initialRundown);
+    }
+    this.subscribe('spxLoadedRundown', (file) => {
+      if (this.api && this.api.setDefaultRundownFile && file) {
+        this.api.setDefaultRundownFile(file);
+      }
+    });
   }
 
   async loadInitialData() {
@@ -89,6 +104,14 @@ export class Store {
           localStorage.setItem('spx_cached_config', JSON.stringify(config));
         } catch (e) {}
         this.setState({ config });
+        if (config.spxRundownFile) {
+          if (!localStorage.getItem('spx_loaded_rundown')) {
+            this.setState({ spxLoadedRundown: config.spxRundownFile });
+          }
+          if (this.api && this.api.setDefaultRundownFile) {
+            this.api.setDefaultRundownFile(this.state.spxLoadedRundown || config.spxRundownFile);
+          }
+        }
         return config;
       }
     } catch (e) {

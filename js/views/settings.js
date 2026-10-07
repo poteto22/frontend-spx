@@ -19,7 +19,8 @@ export class SettingsView {
   }
 
   render() {
-    const { apiUrl, apiKey, config } = this.store.getState();
+    const { apiUrl, apiKey, config, spxLoadedRundown } = this.store.getState();
+    const currentRundownFile = spxLoadedRundown || (config && config.spxRundownFile) || 'Inside_Thailand/Live';
 
     const currentHost = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
     const currentPort = (typeof window !== 'undefined' && window.location && window.location.port) ? window.location.port : '8080';
@@ -92,7 +93,7 @@ export class SettingsView {
         <div class="card">
           <div class="card-header">
             <h3>การตั้งค่าการเชื่อมต่อ SPX Server API</h3>
-            <p class="text-muted fs-xs">กำหนด URL ของ SPX Graphics Controller</p>
+            <p class="text-muted fs-xs">กำหนด URL และ Rundown File ของ SPX Graphics Controller สำหรับส่งคำสั่งควบคุม</p>
           </div>
           <div class="card-body">
             <form id="settings-form" onsubmit="return false;">
@@ -100,6 +101,12 @@ export class SettingsView {
                 <label class="form-label" for="cfg-api-url">SPX Server API Base URL</label>
                 <input type="url" class="form-control" id="cfg-api-url" value="${apiUrl}" required>
                 <span class="text-muted fs-xs">ค่าเริ่มต้นมาตรฐาน: http://${currentHost}:5656/api/v1 (หรือใช้ Reverse Proxy อัตโนมัติ)</span>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label" for="cfg-spx-rundown-file">SPX Rundown File (สำหรับ controlRundownItemByID)</label>
+                <input type="text" class="form-control font-mono" id="cfg-spx-rundown-file" value="${currentRundownFile}" placeholder="Inside_Thailand/Live" required>
+                <span class="text-muted fs-xs">ระบุ Project/Rundown ใน SPX เช่น <code>Inside_Thailand/Live</code> หรือ <code>Nation/MainRundown</code></span>
               </div>
 
               <div class="form-group mt-3">
@@ -112,10 +119,18 @@ export class SettingsView {
                 <input type="text" class="form-control font-mono" id="cfg-endpoint-url" value="${defaultEndpointUrl}">
               </div>
 
-              <div class="flex-between mt-4">
-                <button type="button" class="btn btn-secondary" id="btn-test-spx-conn">
-                  ทดสอบการเชื่อมต่อ API
-                </button>
+              <div class="flex-between mt-4 flex-wrap gap-2">
+                <div class="flex-center gap-2">
+                  <button type="button" class="btn btn-secondary" id="btn-test-spx-conn">
+                    ทดสอบเชื่อมต่อ API
+                  </button>
+                  <button type="button" class="btn btn-outline" id="btn-test-control-play" title="ทดสอบยิง API controlRundownItemByID">
+                    ▶ ทดสอบ Play Logo
+                  </button>
+                  <button type="button" class="btn btn-outline" id="btn-test-control-stop" title="ทดสอบยิง API controlRundownItemByID stop">
+                    ⏹ ทดสอบ Stop Logo
+                  </button>
+                </div>
                 <button type="button" class="btn btn-primary" id="btn-save-spx-cfg">
                   บันทึกการตั้งค่า API
                 </button>
@@ -179,18 +194,63 @@ export class SettingsView {
       }
     });
 
+    document.getElementById('btn-test-control-play').addEventListener('click', async () => {
+      const url = document.getElementById('cfg-api-url').value.trim();
+      const key = document.getElementById('cfg-api-key').value.trim();
+      const rundownFile = document.getElementById('cfg-spx-rundown-file').value.trim() || 'Inside_Thailand/Live';
+      const tempApi = new (this.api.constructor)(url, key, rundownFile);
+
+      const diagBox = document.getElementById('settings-diag-box');
+      const diagContent = document.getElementById('settings-diag-content');
+
+      try {
+        const res = await tempApi.controlRundownItemByID(rundownFile, 'logo', 'play');
+        diagBox.classList.remove('hidden');
+        diagContent.textContent = `Endpoint: ${url}/controlRundownItemByID?file=${encodeURIComponent(rundownFile)}&item=logo&command=play\n\nResponse:\n` + JSON.stringify(res, null, 2);
+        this.showToast(`▶ ทดสอบคำสั่ง Play Logo สำเร็จ (${rundownFile})`, 'success');
+      } catch (err) {
+        diagBox.classList.remove('hidden');
+        diagContent.textContent = `Error testing controlRundownItemByID: ${err.message}`;
+        this.showToast(`ทดสอบคำสั่ง Play ล้มเหลว: ${err.message}`, 'danger');
+      }
+    });
+
+    document.getElementById('btn-test-control-stop').addEventListener('click', async () => {
+      const url = document.getElementById('cfg-api-url').value.trim();
+      const key = document.getElementById('cfg-api-key').value.trim();
+      const rundownFile = document.getElementById('cfg-spx-rundown-file').value.trim() || 'Inside_Thailand/Live';
+      const tempApi = new (this.api.constructor)(url, key, rundownFile);
+
+      const diagBox = document.getElementById('settings-diag-box');
+      const diagContent = document.getElementById('settings-diag-content');
+
+      try {
+        const res = await tempApi.controlRundownItemByID(rundownFile, 'logo', 'stop');
+        diagBox.classList.remove('hidden');
+        diagContent.textContent = `Endpoint: ${url}/controlRundownItemByID?file=${encodeURIComponent(rundownFile)}&item=logo&command=stop\n\nResponse:\n` + JSON.stringify(res, null, 2);
+        this.showToast(`⏹ ทดสอบคำสั่ง Stop Logo สำเร็จ (${rundownFile})`, 'info');
+      } catch (err) {
+        diagBox.classList.remove('hidden');
+        diagContent.textContent = `Error testing controlRundownItemByID stop: ${err.message}`;
+        this.showToast(`ทดสอบคำสั่ง Stop ล้มเหลว: ${err.message}`, 'danger');
+      }
+    });
+
     document.getElementById('btn-save-spx-cfg').addEventListener('click', () => {
       const url = document.getElementById('cfg-api-url').value.trim();
       const key = document.getElementById('cfg-api-key').value.trim();
+      const rundownFile = document.getElementById('cfg-spx-rundown-file').value.trim() || 'Inside_Thailand/Live';
 
       localStorage.setItem('spx_api_url', url);
       localStorage.setItem('spx_api_key', key);
+      localStorage.setItem('spx_loaded_rundown', rundownFile);
 
       this.api.setBaseUrl(url);
       this.api.setApiKey(key);
-      this.store.setState({ apiUrl: url, apiKey: key });
+      this.api.setDefaultRundownFile(rundownFile);
+      this.store.setState({ apiUrl: url, apiKey: key, spxLoadedRundown: rundownFile });
 
-      this.showToast('บันทึกการตั้งค่า API เรียบร้อยแล้ว', 'success');
+      this.showToast(`บันทึกการตั้งค่า API และ Rundown (${rundownFile}) เรียบร้อยแล้ว`, 'success');
     });
 
     this.renderConfigEditor(config);
