@@ -55,10 +55,10 @@ export class CreateRundownView {
             Clear Rundown
           </button>
           <button class="btn btn-outline" id="btn-cr-export">
-            Export JSON
+            Export Rundown
           </button>
           <button class="btn btn-outline" id="btn-cr-import">
-            Import JSON
+            Import Rundown
           </button>
           <input type="file" id="cr-file-input" accept=".json" style="display:none;">
         </div>

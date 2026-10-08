@@ -123,7 +123,7 @@ export class ControllerView {
         <!-- Side Monitor Panel -->
         <aside class="side-monitor-panel">
           <div class="card p-3 ctrl-side-card">
-            <h4 class="fs-sm mb-2 text-secondary">ข้อมูลรายการที่เลือกอยู่ (Selected Data)</h4>
+            <h4 class="fs-sm mb-2 text-secondary">ข้อมูลรายการที่เลือกอยู่</h4>
             <div id="ctrl-item-details" class="fs-xs flex flex-col gap-2">
               <!-- Details -->
             </div>
